@@ -1,0 +1,57 @@
+version: "3.9"
+
+# ── Networks ────────────────────────────────────────────────────────────────
+# Containers that share a network can talk to each other by service name.
+# "backend" can reach "db" just by using hostname "db" — no IP addresses.
+networks:
+  mockmate_network:
+    driver: bridge
+
+# ── Volumes ─────────────────────────────────────────────────────────────────
+# Named volumes persist data between container restarts.
+# Without this, stopping the "db" container wipes your database.
+volumes:
+  postgres_data:
+
+# ── Services ────────────────────────────────────────────────────────────────
+services:
+
+  # ── PostgreSQL Database ────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine           # Lightweight Alpine Linux variant
+    container_name: mockmate_postgres
+    restart: unless-stopped             # Auto-restart on crash, not on manual stop
+    environment:
+      POSTGRES_USER: mockmate_user
+      POSTGRES_PASSWORD: mockmate_pass
+      POSTGRES_DB: mockmate_db
+    ports:
+      - "5432:5432"                     # host_port:container_port
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # Persist DB data
+    networks:
+      - mockmate_network
+    healthcheck:
+      # Checks if PostgreSQL is ready to accept connections
+      # "backend" service won't start until this passes
+      test: ["CMD-SHELL", "pg_isready -U mockmate_user -d mockmate_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── FastAPI Backend ────────────────────────────────────────────────────
+  # Uncomment this section in Phase 7 when we write the Dockerfile
+  # backend:
+  #   build: .
+  #   container_name: mockmate_backend
+  #   restart: unless-stopped
+  #   env_file: .env
+  #   ports:
+  #     - "8000:8000"
+  #   depends_on:
+  #     db:
+  #       condition: service_healthy   # Wait for DB healthcheck to pass
+  #   networks:
+  #     - mockmate_network
+  #   command: >
+  #     sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"
