@@ -1,15 +1,8 @@
 /// Login Screen — BlocConsumer pattern for reactive UI.
-///
-/// WHY BLOCCONSUMER?
-/// BlocConsumer = BlocBuilder + BlocListener combined.
-/// - BlocBuilder: rebuilds UI when state changes (shows loading spinner)
-/// - BlocListener: runs side effects (navigate to dashboard on success)
-///
-/// We separate "rebuilding UI" (builder) from "doing things" (listener)
-/// because navigation and snackbars are NOT UI rebuilds — they're actions.
 library;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mockmate/core/di/injection_container.dart';
@@ -24,7 +17,6 @@ class LoginScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // BlocProvider creates a new AuthBloc (from DI) and provides it to the tree.
     return BlocProvider(
       create: (_) => sl<AuthBloc>(),
       child: const _LoginView(),
@@ -52,7 +44,9 @@ class _LoginViewState extends State<_LoginView> {
   }
 
   void _onLoginPressed(BuildContext context) {
+    FocusScope.of(context).unfocus();
     if (_formKey.currentState?.validate() ?? false) {
+      HapticFeedback.lightImpact();
       context.read<AuthBloc>().add(
         LoginRequested(
           email: _emailController.text.trim(),
@@ -69,10 +63,8 @@ class _LoginViewState extends State<_LoginView> {
     return BlocConsumer<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is Authenticated) {
-          // Success! Navigate to dashboard and clear the back stack.
           context.go(AppRoutes.dashboard);
         } else if (state is AuthError) {
-          // Show error without leaving the screen.
           AppSnackBar.showError(context, state.message);
         }
       },
@@ -80,15 +72,19 @@ class _LoginViewState extends State<_LoginView> {
         return Scaffold(
           body: SafeArea(
             child: SingleChildScrollView(
+              // Keeps content visible above keyboard
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 48),
               child: Form(
                 key: _formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // ── Back Button ────────────────────────────────────────
+                    // ── Back Button (pop, not go) ─────────────────────────
                     IconButton(
-                      onPressed: () => context.go(AppRoutes.onboarding),
+                      onPressed: () => context.canPop()
+                          ? context.pop()
+                          : context.go(AppRoutes.onboarding),
                       icon: const Icon(Icons.arrow_back_rounded),
                       style: IconButton.styleFrom(
                         backgroundColor: theme.colorScheme.surface,
@@ -117,6 +113,7 @@ class _LoginViewState extends State<_LoginView> {
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
                       prefixIcon: Icons.email_outlined,
+                      textInputAction: TextInputAction.next,
                       validator: (v) {
                         if (v == null || v.isEmpty) return 'Email is required';
                         if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(v)) {
@@ -133,6 +130,8 @@ class _LoginViewState extends State<_LoginView> {
                       controller: _passwordController,
                       isPassword: true,
                       prefixIcon: Icons.lock_outline_rounded,
+                      textInputAction: TextInputAction.done,
+                      onSubmitted: (_) => _onLoginPressed(context),
                       validator: (v) {
                         if (v == null || v.isEmpty) return 'Password is required';
                         if (v.length < 8) return 'At least 8 characters required';
@@ -140,18 +139,22 @@ class _LoginViewState extends State<_LoginView> {
                       },
                     ),
 
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 4),
 
-                    // Forgot password (right-aligned)
+                    // Forgot password
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
                         onPressed: () {},
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 4, vertical: 8),
+                        ),
                         child: const Text('Forgot Password?'),
                       ),
                     ),
 
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 24),
 
                     // ── Login Button ──────────────────────────────────────
                     AppPrimaryButton(
@@ -170,8 +173,13 @@ class _LoginViewState extends State<_LoginView> {
                           "Don't have an account? ",
                           style: theme.textTheme.bodyMedium,
                         ),
-                        GestureDetector(
-                          onTap: () => context.go(AppRoutes.register),
+                        TextButton(
+                          onPressed: () => context.go(AppRoutes.register),
+                          style: TextButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
                           child: Text(
                             'Sign Up',
                             style: theme.textTheme.bodyMedium?.copyWith(

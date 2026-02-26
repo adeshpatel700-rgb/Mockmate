@@ -1,7 +1,8 @@
-/// Register Screen — similar to Login but with name field and password confirmation.
+/// Register Screen — similar to Login but with name + password confirmation.
 library;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mockmate/core/di/injection_container.dart';
@@ -47,7 +48,9 @@ class _RegisterViewState extends State<_RegisterView> {
   }
 
   void _onRegisterPressed(BuildContext context) {
+    FocusScope.of(context).unfocus();
     if (_formKey.currentState?.validate() ?? false) {
+      HapticFeedback.lightImpact();
       context.read<AuthBloc>().add(
         RegisterRequested(
           name: _nameController.text.trim(),
@@ -74,6 +77,7 @@ class _RegisterViewState extends State<_RegisterView> {
         return Scaffold(
           body: SafeArea(
             child: SingleChildScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 48),
               child: Form(
                 key: _formKey,
@@ -81,7 +85,9 @@ class _RegisterViewState extends State<_RegisterView> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     IconButton(
-                      onPressed: () => context.go(AppRoutes.onboarding),
+                      onPressed: () => context.canPop()
+                          ? context.pop()
+                          : context.go(AppRoutes.onboarding),
                       icon: const Icon(Icons.arrow_back_rounded),
                       style: IconButton.styleFrom(
                         backgroundColor: theme.colorScheme.surface,
@@ -107,6 +113,7 @@ class _RegisterViewState extends State<_RegisterView> {
                       hint: 'Adesh Patel',
                       controller: _nameController,
                       prefixIcon: Icons.person_outline_rounded,
+                      textInputAction: TextInputAction.next,
                       validator: (v) {
                         if (v == null || v.isEmpty) return 'Name is required';
                         if (v.length < 2) return 'Name too short';
@@ -122,6 +129,7 @@ class _RegisterViewState extends State<_RegisterView> {
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
                       prefixIcon: Icons.email_outlined,
+                      textInputAction: TextInputAction.next,
                       validator: (v) {
                         if (v == null || v.isEmpty) return 'Email is required';
                         if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(v)) {
@@ -138,6 +146,7 @@ class _RegisterViewState extends State<_RegisterView> {
                       controller: _passwordController,
                       isPassword: true,
                       prefixIcon: Icons.lock_outline_rounded,
+                      textInputAction: TextInputAction.next,
                       validator: (v) {
                         if (v == null || v.isEmpty) return 'Password is required';
                         if (v.length < 8) return 'At least 8 characters required';
@@ -152,7 +161,10 @@ class _RegisterViewState extends State<_RegisterView> {
                       controller: _confirmPasswordController,
                       isPassword: true,
                       prefixIcon: Icons.lock_outline_rounded,
+                      textInputAction: TextInputAction.done,
+                      onSubmitted: (_) => _onRegisterPressed(context),
                       validator: (v) {
+                        if (v == null || v.isEmpty) return 'Please confirm your password';
                         if (v != _passwordController.text) {
                           return 'Passwords do not match';
                         }
@@ -177,8 +189,13 @@ class _RegisterViewState extends State<_RegisterView> {
                           'Already have an account? ',
                           style: theme.textTheme.bodyMedium,
                         ),
-                        GestureDetector(
-                          onTap: () => context.go(AppRoutes.login),
+                        TextButton(
+                          onPressed: () => context.go(AppRoutes.login),
+                          style: TextButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
                           child: Text(
                             'Log In',
                             style: theme.textTheme.bodyMedium?.copyWith(

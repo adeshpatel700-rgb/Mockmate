@@ -1,13 +1,14 @@
 /// Onboarding Screen — first impression of MockMate.
 ///
 /// UX PRINCIPLES APPLIED:
-/// 1. Clear value proposition above the fold — user knows what the app does instantly
-/// 2. Visual hierarchy: big headline → subtitle → CTA button
-/// 3. Whitespace creates breathing room and makes content scannable
-/// 4. Single clear CTA (Get Started) reduces decision paralysis
+/// 1. Real brand logo as hero — immediate visual brand recognition
+/// 2. Staggered feature pill animation — each pill slides in 100ms apart
+/// 3. Clear value proposition above the fold
+/// 4. Single clear CTA reduces decision paralysis
 library;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mockmate/core/router/app_router.dart';
 import 'package:mockmate/core/widgets/app_button.dart';
@@ -23,41 +24,72 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     with TickerProviderStateMixin {
   late final AnimationController _heroController;
   late final AnimationController _contentController;
+  late final List<AnimationController> _pillControllers;
+
+  late final Animation<double> _heroScale;
   late final Animation<double> _heroFade;
   late final Animation<Offset> _contentSlide;
   late final Animation<double> _contentFade;
+
+  static const _features = [
+    (Icons.smart_toy_outlined, 'AI-powered questions for your role'),
+    (Icons.bar_chart_rounded,  'Track progress over time'),
+    (Icons.feedback_outlined,  'Instant detailed feedback per answer'),
+  ];
 
   @override
   void initState() {
     super.initState();
 
-    // Hero animation — the icon fades in first
     _heroController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 900),
     );
-
-    // Content animation — text and buttons slide up + fade in
     _contentController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 700),
     );
+    _pillControllers = List.generate(
+      _features.length,
+      (_) => AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 400),
+      ),
+    );
+
+    _heroScale = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 0.5, end: 1.08), weight: 70),
+      TweenSequenceItem(tween: Tween(begin: 1.08, end: 1.0), weight: 30),
+    ]).animate(CurvedAnimation(parent: _heroController, curve: Curves.easeOut));
 
     _heroFade = CurvedAnimation(parent: _heroController, curve: Curves.easeOut);
+
     _contentSlide = Tween<Offset>(
-      begin: const Offset(0, 0.3),
+      begin: const Offset(0, 0.25),
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _contentController, curve: Curves.easeOutCubic));
     _contentFade = CurvedAnimation(parent: _contentController, curve: Curves.easeOut);
 
-    // Start animations sequentially
-    _heroController.forward().then((_) => _contentController.forward());
+    _startSequence();
+  }
+
+  Future<void> _startSequence() async {
+    await _heroController.forward();
+    _contentController.forward();
+    // Stagger the feature pills 120ms apart
+    for (final ctrl in _pillControllers) {
+      await Future.delayed(const Duration(milliseconds: 120));
+      if (mounted) ctrl.forward();
+    }
   }
 
   @override
   void dispose() {
     _heroController.dispose();
     _contentController.dispose();
+    for (final c in _pillControllers) {
+      c.dispose();
+    }
     super.dispose();
   }
 
@@ -73,43 +105,25 @@ class _OnboardingScreenState extends State<OnboardingScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(height: size.height * 0.12),
+              SizedBox(height: size.height * 0.10),
 
-              // ── Hero Icon ───────────────────────────────────────────────
+              // ── Hero Logo (real brand asset) ────────────────────────────
               FadeTransition(
                 opacity: _heroFade,
-                child: Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        theme.colorScheme.primary,
-                        theme.colorScheme.secondary,
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: theme.colorScheme.primary.withOpacity(0.4),
-                        blurRadius: 20,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.psychology_rounded,
-                    color: Colors.white,
-                    size: 40,
+                child: ScaleTransition(
+                  scale: _heroScale,
+                  child: Image.asset(
+                    'assets/images/logo.png',
+                    width: 88,
+                    height: 88,
+                    filterQuality: FilterQuality.high,
                   ),
                 ),
               ),
 
-              SizedBox(height: size.height * 0.06),
+              SizedBox(height: size.height * 0.055),
 
-              // ── Headline + Body ─────────────────────────────────────────
+              // ── Headline + Body ──────────────────────────────────────────
               SlideTransition(
                 position: _contentSlide,
                 child: FadeTransition(
@@ -123,44 +137,62 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                           height: 1.1,
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 16),
                       Text(
-                        'Practice with AI-powered mock interviews tailored to your role. Get instant feedback and track your growth.',
+                        'Practice with AI mock interviews tailored to your role. Get instant feedback and track your growth.',
                         style: theme.textTheme.bodyLarge,
                       ),
-                      SizedBox(height: size.height * 0.06),
+                      SizedBox(height: size.height * 0.045),
 
-                      // ── Feature Pills ──────────────────────────────────
-                      _FeaturePill(
-                        icon: Icons.smart_toy_outlined,
-                        label: 'AI-powered questions for your role',
-                        color: theme.colorScheme.primary,
-                      ),
-                      const SizedBox(height: 12),
-                      _FeaturePill(
-                        icon: Icons.bar_chart_rounded,
-                        label: 'Track progress over time',
-                        color: theme.colorScheme.secondary,
-                      ),
-                      const SizedBox(height: 12),
-                      _FeaturePill(
-                        icon: Icons.feedback_outlined,
-                        label: 'Instant detailed feedback',
-                        color: theme.colorScheme.primary,
-                      ),
+                      // ── Feature Pills (staggered) ───────────────────────
+                      for (int i = 0; i < _features.length; i++) ...[
+                        AnimatedBuilder(
+                          animation: _pillControllers[i],
+                          builder: (context, child) => FadeTransition(
+                            opacity: CurvedAnimation(
+                              parent: _pillControllers[i],
+                              curve: Curves.easeOut,
+                            ),
+                            child: SlideTransition(
+                              position: Tween<Offset>(
+                                begin: const Offset(-0.15, 0),
+                                end: Offset.zero,
+                              ).animate(CurvedAnimation(
+                                parent: _pillControllers[i],
+                                curve: Curves.easeOutCubic,
+                              )),
+                              child: child,
+                            ),
+                          ),
+                          child: _FeaturePill(
+                            icon: _features[i].$1,
+                            label: _features[i].$2,
+                            color: i == 1
+                                ? theme.colorScheme.secondary
+                                : theme.colorScheme.primary,
+                          ),
+                        ),
+                        if (i < _features.length - 1) const SizedBox(height: 12),
+                      ],
 
-                      SizedBox(height: size.height * 0.06),
+                      SizedBox(height: size.height * 0.055),
 
-                      // ── CTA Buttons ────────────────────────────────────
+                      // ── CTA Buttons ─────────────────────────────────────
                       AppPrimaryButton(
                         label: 'Get Started',
                         icon: Icons.arrow_forward_rounded,
-                        onPressed: () => context.go(AppRoutes.register),
+                        onPressed: () {
+                          HapticFeedback.lightImpact();
+                          context.go(AppRoutes.register);
+                        },
                       ),
                       const SizedBox(height: 14),
                       AppOutlinedButton(
                         label: 'I already have an account',
-                        onPressed: () => context.go(AppRoutes.login),
+                        onPressed: () {
+                          HapticFeedback.lightImpact();
+                          context.go(AppRoutes.login);
+                        },
                       ),
                     ],
                   ),
@@ -174,7 +206,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   }
 }
 
-// ── Feature Pill Widget ────────────────────────────────────────────────────
+// ── Feature Pill Widget ─────────────────────────────────────────────────────
 
 class _FeaturePill extends StatelessWidget {
   final IconData icon;
@@ -193,14 +225,14 @@ class _FeaturePill extends StatelessWidget {
     return Row(
       children: [
         Container(
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.all(9),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.15),
-            borderRadius: BorderRadius.circular(8),
+            color: color.withValues(alpha: 0.13),
+            borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(icon, size: 18, color: color),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 14),
         Expanded(
           child: Text(label, style: theme.textTheme.bodyMedium),
         ),
