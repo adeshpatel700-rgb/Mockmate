@@ -21,6 +21,7 @@ dependencies:
   # Networking
   dio: ^5.4.3+1
   retrofit: ^4.1.0
+  connectivity_plus: ^6.0.5
 
   # Secure Storage
   flutter_secure_storage: ^9.2.2
@@ -46,6 +47,7 @@ dependencies:
   fl_chart: ^0.68.0
   shimmer: ^3.0.0
   gap: ^3.0.1
+  cached_network_image: ^3.3.1
 
   # Utilities
   logger: ^2.3.0

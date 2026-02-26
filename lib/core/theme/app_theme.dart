@@ -18,76 +18,94 @@ class AppTheme {
   AppTheme._();
 
   // ── Brand Colour Palette ──────────────────────────────────────────────────
-  // Primary purple-indigo gradient palette — modern SaaS aesthetic.
-  static const Color _primaryColor = Color(0xFF6C63FF);      // Purple-indigo
-  // ignore: unused_field
-  static const Color _primaryLight = Color(0xFF9D98FF);
-  static const Color _secondaryColor = Color(0xFF03DAC6);    // Teal accent
-  static const Color _errorColor = Color(0xFFCF6679);
+  // Modern gradient palette with better contrast and accessibility.
+  static const Color _primaryColor =
+      Color(0xFF6366F1); // Indigo-500 (better contrast)
+  static const Color _primaryLight = Color(0xFF818CF8); // Indigo-400
+  static const Color _secondaryColor =
+      Color(0xFF06B6D4); // Cyan-500 (more vibrant)
+  static const Color _errorColor = Color(0xFFEF4444); // Red-500
+  static const Color _successColor = Color(0xFF10B981); // Green-500
+  static const Color _warningColor = Color(0xFFF59E0B); // Amber-500
 
-  // Dark mode colours
-  static const Color _darkBackground = Color(0xFF0F0E17);    // Deep dark
-  static const Color _darkSurface = Color(0xFF1A1A2E);
-  static const Color _darkCard = Color(0xFF16213E);
-  static const Color _darkText = Color(0xFFFFFFFF);
-  static const Color _darkSubtext = Color(0xFFAAAAAA);
+  // Dark mode colours — deeper blacks for OLED optimization
+  static const Color _darkBackground = Color(0xFF0A0A0F); // Deeper dark
+  static const Color _darkSurface = Color(0xFF18181B); // Zinc-900
+  static const Color _darkCard = Color(0xFF1F1F23); // Elevated surface
+  static const Color _darkText = Color(0xFFFAFAFA); // Almost white
+  static const Color _darkSubtext = Color(0xFFA1A1AA); // Zinc-400
 
-  // Light mode colours
-  static const Color _lightBackground = Color(0xFFF8F9FE);
+  // Light mode colours — warmer, softer tones
+  static const Color _lightBackground = Color(0xFFF9FAFB); // Gray-50
   static const Color _lightSurface = Color(0xFFFFFFFF);
   static const Color _lightCard = Color(0xFFFFFFFF);
-  static const Color _lightText = Color(0xFF0F0E17);
-  static const Color _lightSubtext = Color(0xFF666666);
+  static const Color _lightText = Color(0xFF18181B); // Zinc-900
+  static const Color _lightSubtext = Color(0xFF71717A); // Zinc-500
 
   // ── Typography ────────────────────────────────────────────────────────────
-  // Inter font — the go-to for modern SaaS/developer tools.
+  // Plus Jakarta Sans — modern, friendly, excellent for reading long text.
+  // Perfect for interview questions and feedback.
   static TextTheme _buildTextTheme(Color textColor, Color subtextColor) {
-    return GoogleFonts.interTextTheme(
+    return GoogleFonts.plusJakartaSansTextTheme(
       TextTheme(
         displayLarge: TextStyle(
-          fontSize: 32,
+          fontSize: 36,
           fontWeight: FontWeight.w800,
           color: textColor,
-          letterSpacing: -1.0,
+          letterSpacing: -1.2,
+          height: 1.1,
         ),
         displayMedium: TextStyle(
-          fontSize: 26,
+          fontSize: 28,
           fontWeight: FontWeight.w700,
           color: textColor,
-          letterSpacing: -0.5,
+          letterSpacing: -0.8,
+          height: 1.2,
         ),
         titleLarge: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
+          fontSize: 22,
+          fontWeight: FontWeight.w700,
           color: textColor,
+          letterSpacing: -0.3,
+          height: 1.3,
         ),
         titleMedium: TextStyle(
-          fontSize: 16,
+          fontSize: 18,
           fontWeight: FontWeight.w600,
           color: textColor,
+          height: 1.4,
         ),
         bodyLarge: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w400,
           color: textColor,
-          height: 1.6,
+          height: 1.7,
+          letterSpacing: 0.1,
         ),
         bodyMedium: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w400,
           color: subtextColor,
-          height: 1.5,
+          height: 1.6,
+          letterSpacing: 0.1,
         ),
         bodySmall: TextStyle(
-          fontSize: 12,
+          fontSize: 13,
           fontWeight: FontWeight.w400,
           color: subtextColor,
+          height: 1.5,
         ),
         labelLarge: TextStyle(
-          fontSize: 14,
+          fontSize: 15,
           fontWeight: FontWeight.w600,
           color: textColor,
-          letterSpacing: 0.5,
+          letterSpacing: 0.2,
+        ),
+        labelMedium: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+          color: subtextColor,
+          letterSpacing: 0.3,
         ),
       ),
     );
@@ -111,103 +129,174 @@ class AppTheme {
       scaffoldBackgroundColor: _darkBackground,
       textTheme: _buildTextTheme(_darkText, _darkSubtext),
 
-      // AppBar — transparent with no elevation for modern look
+      // AppBar — transparent with smooth blur effect
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        scrolledUnderElevation: 0,
-        iconTheme: const IconThemeData(color: _darkText),
-        titleTextStyle: GoogleFonts.inter(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
+        scrolledUnderElevation: 0.5,
+        surfaceTintColor: _darkSurface,
+        iconTheme: const IconThemeData(color: _darkText, size: 24),
+        titleTextStyle: GoogleFonts.plusJakartaSans(
+          fontSize: 20,
+          fontWeight: FontWeight.w700,
           color: _darkText,
+          letterSpacing: -0.3,
         ),
       ),
 
-      // Cards — subtle glass-like appearance
+      // Cards — elevated with subtle glow
       cardTheme: CardThemeData(
         color: _darkCard,
         elevation: 0,
+        shadowColor: _primaryColor.withOpacity(0.1),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: Colors.white.withOpacity(0.08)),
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(
+            color: Colors.white.withOpacity(0.06),
+            width: 1,
+          ),
         ),
+        margin: const EdgeInsets.symmetric(vertical: 8),
       ),
 
-      // Elevated Buttons
+      // Elevated Buttons — modern with shadow
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: _primaryColor,
           foregroundColor: Colors.white,
           elevation: 0,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          shadowColor: _primaryColor.withOpacity(0.4),
+          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(14),
           ),
-          textStyle: GoogleFonts.inter(
+          textStyle: GoogleFonts.plusJakartaSans(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.2,
+          ),
+        ).copyWith(
+          overlayColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.pressed)) {
+              return Colors.white.withOpacity(0.2);
+            }
+            return null;
+          }),
+        ),
+      ),
+
+      // Outlined Buttons — thicker border, better hover
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: _primaryColor,
+          side: BorderSide(color: _primaryColor.withOpacity(0.5), width: 2),
+          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          textStyle: GoogleFonts.plusJakartaSans(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+
+      // Text Buttons — subtle but visible
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: _primaryColor,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          textStyle: GoogleFonts.plusJakartaSans(
             fontSize: 15,
             fontWeight: FontWeight.w600,
           ),
         ),
       ),
 
-      // Outlined Buttons
-      outlinedButtonTheme: OutlinedButtonThemeData(
-        style: OutlinedButton.styleFrom(
-          foregroundColor: _primaryColor,
-          side: const BorderSide(color: _primaryColor, width: 1.5),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      ),
-
-      // Text Buttons
-      textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(
-          foregroundColor: _primaryColor,
-        ),
-      ),
-
-      // Input Fields
+      // Input Fields — softer, more rounded
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: _darkSurface,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: Colors.white.withOpacity(0.08)),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: Colors.white.withOpacity(0.08)),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: _primaryColor, width: 2),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: _primaryColor, width: 2.5),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: _errorColor),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: _errorColor, width: 1.5),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: _errorColor, width: 2),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: _errorColor, width: 2.5),
         ),
-        labelStyle: TextStyle(color: _darkSubtext),
-        hintStyle: TextStyle(color: _darkSubtext.withOpacity(0.7)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        labelStyle: GoogleFonts.plusJakartaSans(
+          color: _darkSubtext,
+          fontSize: 15,
+          fontWeight: FontWeight.w500,
+        ),
+        hintStyle: GoogleFonts.plusJakartaSans(
+          color: _darkSubtext.withOpacity(0.6),
+          fontSize: 15,
+        ),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       ),
 
-      // Chip Theme (for role selection badges)
+      // Chip Theme — rounded pills
       chipTheme: ChipThemeData(
-        backgroundColor: _darkCard,
+        backgroundColor: _darkSurface,
         selectedColor: _primaryColor.withOpacity(0.2),
-        side: BorderSide(color: Colors.white.withOpacity(0.1)),
+        side: BorderSide(color: Colors.white.withOpacity(0.08)),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(12),
         ),
-        labelStyle: const TextStyle(color: _darkText),
+        labelStyle: GoogleFonts.plusJakartaSans(
+          color: _darkText,
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      ),
+
+      // Floating Action Button
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: _primaryColor,
+        foregroundColor: Colors.white,
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+      ),
+
+      // Bottom Sheet
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: _darkCard,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+      ),
+
+      // Dialog
+      dialogTheme: DialogThemeData(
+        backgroundColor: _darkCard,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
+        elevation: 0,
+      ),
+
+      // Progress Indicator
+      progressIndicatorTheme: const ProgressIndicatorThemeData(
+        color: _primaryColor,
+        linearTrackColor: _darkSurface,
       ),
 
       // Divider
@@ -235,7 +324,6 @@ class AppTheme {
       colorScheme: colorScheme,
       scaffoldBackgroundColor: _lightBackground,
       textTheme: _buildTextTheme(_lightText, _lightSubtext),
-
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -247,7 +335,6 @@ class AppTheme {
           color: _lightText,
         ),
       ),
-
       cardTheme: CardThemeData(
         color: _lightCard,
         elevation: 0,
@@ -256,7 +343,6 @@ class AppTheme {
           side: BorderSide(color: Colors.black.withOpacity(0.08)),
         ),
       ),
-
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: _primaryColor,
@@ -272,7 +358,6 @@ class AppTheme {
           ),
         ),
       ),
-
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: _primaryColor,
@@ -283,7 +368,6 @@ class AppTheme {
           ),
         ),
       ),
-
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: _lightSurface,
@@ -301,9 +385,9 @@ class AppTheme {
         ),
         labelStyle: TextStyle(color: _lightSubtext),
         hintStyle: TextStyle(color: _lightSubtext.withOpacity(0.7)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
-
       chipTheme: ChipThemeData(
         backgroundColor: _lightCard,
         selectedColor: _primaryColor.withOpacity(0.15),
@@ -313,7 +397,6 @@ class AppTheme {
         ),
         labelStyle: const TextStyle(color: _lightText),
       ),
-
       dividerTheme: DividerThemeData(
         color: Colors.black.withOpacity(0.08),
         thickness: 1,

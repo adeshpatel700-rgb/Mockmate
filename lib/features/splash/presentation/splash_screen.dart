@@ -32,6 +32,9 @@ class _SplashScreenState extends State<SplashScreen>
   late final AnimationController _textController;
   late final AnimationController _exitController;
 
+  // Cancellation flag to prevent operations after dispose
+  bool _isDisposed = false;
+
   // Background
   late final Animation<double> _bgOpacity;
   late final Animation<double> _bgBloom;
@@ -156,55 +159,77 @@ class _SplashScreenState extends State<SplashScreen>
 
   Future<void> _startSequence() async {
     // Stage 1: Background blooms
+    if (_isDisposed) return;
     await _bgController.forward();
 
     // Stage 2: Logo materializes (slight overlap with bg)
+    if (_isDisposed) return;
     await Future.delayed(const Duration(milliseconds: 100));
+    if (_isDisposed) return;
     _logoController.forward();
     await Future.delayed(const Duration(milliseconds: 400));
 
     // Stage 3: Particles orbit
+    if (_isDisposed) return;
     _particleController.forward();
 
     // Stage 4: Text reveals (slight overlap)
+    if (_isDisposed) return;
     await Future.delayed(const Duration(milliseconds: 200));
+    if (_isDisposed) return;
     _textController.forward();
 
     // Stage 4b: Typewriter for tagline
+    if (_isDisposed) return;
     await Future.delayed(const Duration(milliseconds: 600));
+    if (_isDisposed) return;
     await _runTypewriter();
 
     // Hold for appreciation
+    if (_isDisposed) return;
     await Future.delayed(const Duration(milliseconds: 700));
 
     // Stage 5: Exit
+    if (_isDisposed) return;
     _exitController.forward();
     await Future.delayed(const Duration(milliseconds: 500));
 
-    if (mounted) _navigate();
+    if (!_isDisposed && mounted) _navigate();
   }
 
   Future<void> _runTypewriter() async {
     for (int i = 0; i <= _tagline.length; i++) {
-      if (!mounted) return;
+      if (_isDisposed || !mounted) return;
       setState(() => _visibleChars = i);
       await Future.delayed(const Duration(milliseconds: 45));
     }
   }
 
   Future<void> _navigate() async {
-    const storage = FlutterSecureStorage();
-    final token = await storage.read(key: AppConstants.accessTokenKey);
-    if (!mounted) return;
-    if (token != null && token.isNotEmpty) {
-      context.go(AppRoutes.dashboard);
-    } else {
-      context.go(AppRoutes.onboarding);
+    if (_isDisposed || !mounted) return;
+
+    try {
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: AppConstants.accessTokenKey);
+
+      if (_isDisposed || !mounted) return;
+
+      if (token != null && token.isNotEmpty) {
+        context.go(AppRoutes.dashboard);
+      } else {
+        context.go(AppRoutes.onboarding);
+      }
+    } catch (e) {
+      // If storage read fails, default to onboarding
+      if (!_isDisposed && mounted) {
+        context.go(AppRoutes.onboarding);
+      }
     }
   }
 
   @override
   void dispose() {
+    _isDisposed = true;
     _bgController.dispose();
     _logoController.dispose();
     _particleController.dispose();
@@ -241,7 +266,8 @@ class _SplashScreenState extends State<SplashScreen>
                         center: const Alignment(0, -0.15),
                         radius: 0.8 + (_bgBloom.value * 0.4),
                         colors: [
-                          const Color(0xFF1A1042).withValues(alpha: _bgBloom.value),
+                          const Color(0xFF1A1042)
+                              .withValues(alpha: _bgBloom.value),
                           const Color(0xFF0F0E17),
                         ],
                       ),
@@ -270,8 +296,10 @@ class _SplashScreenState extends State<SplashScreen>
                         shape: BoxShape.circle,
                         gradient: RadialGradient(
                           colors: [
-                            const Color(0xFF6C63FF).withValues(alpha: _glowOpacity.value),
-                            const Color(0xFF03DAC6).withValues(alpha: _glowOpacity.value * 0.3),
+                            const Color(0xFF6C63FF)
+                                .withValues(alpha: _glowOpacity.value),
+                            const Color(0xFF03DAC6)
+                                .withValues(alpha: _glowOpacity.value * 0.3),
                             Colors.transparent,
                           ],
                         ),
@@ -325,7 +353,8 @@ class _SplashScreenState extends State<SplashScreen>
                                       letterSpacing: -1.2,
                                       shadows: [
                                         Shadow(
-                                          color: const Color(0xFF6C63FF).withValues(alpha: 0.4),
+                                          color: const Color(0xFF6C63FF)
+                                              .withValues(alpha: 0.4),
                                           blurRadius: 20,
                                         ),
                                       ],
@@ -340,7 +369,8 @@ class _SplashScreenState extends State<SplashScreen>
                                       letterSpacing: -1.2,
                                       shadows: [
                                         Shadow(
-                                          color: const Color(0xFF6C63FF).withValues(alpha: 0.6),
+                                          color: const Color(0xFF6C63FF)
+                                              .withValues(alpha: 0.6),
                                           blurRadius: 24,
                                         ),
                                       ],
@@ -453,8 +483,16 @@ class _NeuralParticlePainter extends CustomPainter {
 
   // Line pairs (index pairs from _nodes)
   static const List<List<int>> _edges = [
-    [0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7],
-    [7, 0], [0, 4], [2, 6],
+    [0, 1],
+    [1, 2],
+    [2, 3],
+    [3, 4],
+    [4, 5],
+    [5, 6],
+    [6, 7],
+    [7, 0],
+    [0, 4],
+    [2, 6],
   ];
 
   @override
@@ -464,7 +502,8 @@ class _NeuralParticlePainter extends CustomPainter {
     // Ease in-out for orbit
     final eased = _easeInOut(progress);
     final fadeIn = (progress * 3).clamp(0.0, 1.0);
-    final fadeOut = progress > 0.7 ? ((1 - progress) / 0.3).clamp(0.0, 1.0) : 1.0;
+    final fadeOut =
+        progress > 0.7 ? ((1 - progress) / 0.3).clamp(0.0, 1.0) : 1.0;
     final alpha = fadeIn * fadeOut;
 
     final positions = <Offset>[];
