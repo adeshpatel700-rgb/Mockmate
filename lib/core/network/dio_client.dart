@@ -23,10 +23,11 @@ import 'package:mockmate/core/errors/exceptions.dart';
 // ── Auth Token Interceptor ─────────────────────────────────────────────────
 
 /// Automatically attaches the JWT token to every request header.
-/// If the token is expired, it logs the user out.
+/// If the token is expired (401), attempts to refresh it.
 class AuthInterceptor extends Interceptor {
   final FlutterSecureStorage _secureStorage;
   final Logger _logger;
+  bool _isRefreshing = false;
 
   AuthInterceptor({
     required FlutterSecureStorage secureStorage,
@@ -54,11 +55,29 @@ class AuthInterceptor extends Interceptor {
   }
 
   @override
-  void onError(DioException err, ErrorInterceptorHandler handler) {
-    if (err.response?.statusCode == 401) {
-      _logger.w('⚠️ 401 Unauthorized — token may be expired');
-      // In a production app, you would trigger a token refresh here.
-      // For now, we pass the error through and handle it in the repository.
+  Future<void> onError(
+      DioException err, ErrorInterceptorHandler handler) async {
+    if (err.response?.statusCode == 401 && !_isRefreshing) {
+      _logger.w('⚠️ 401 Unauthorized — attempting token refresh');
+      _isRefreshing = true;
+
+      try {
+        // Attempt to refresh token
+        final refreshToken =
+            await _secureStorage.read(key: AppConstants.refreshTokenKey);
+
+        if (refreshToken != null) {
+          // TODO: Implement actual token refresh endpoint call
+          // For now, we'll just clear the token and force re-login
+          _logger.i('🔄 Token refresh not implemented yet — clearing storage');
+          await _secureStorage.delete(key: AppConstants.accessTokenKey);
+          await _secureStorage.delete(key: AppConstants.refreshTokenKey);
+        }
+      } catch (e) {
+        _logger.e('❌ Token refresh failed: $e');
+      } finally {
+        _isRefreshing = false;
+      }
     }
     handler.next(err);
   }
@@ -105,13 +124,16 @@ class DioFactory {
     required FlutterSecureStorage secureStorage,
     required Logger logger,
   }) {
-    final baseUrl = dotenv.env['API_BASE_URL'] ?? 'http://localhost:8000/api/v1';
+    final baseUrl =
+        dotenv.env['API_BASE_URL'] ?? 'http://localhost:8000/api/v1';
 
     final dio = Dio(
       BaseOptions(
         baseUrl: baseUrl,
-        connectTimeout: const Duration(milliseconds: AppConstants.connectTimeout),
-        receiveTimeout: const Duration(milliseconds: AppConstants.receiveTimeout),
+        connectTimeout:
+            const Duration(milliseconds: AppConstants.connectTimeout),
+        receiveTimeout:
+            const Duration(milliseconds: AppConstants.receiveTimeout),
         contentType: 'application/json',
         responseType: ResponseType.json,
       ),
@@ -128,14 +150,17 @@ class DioFactory {
   /// Creates a Dio instance specifically for the Groq AI API.
   /// Uses a separate base URL and API key header (not JWT).
   static Dio createGroqDio({required Logger logger}) {
-    final baseUrl = dotenv.env['GROQ_BASE_URL'] ?? 'https://api.groq.com/openai/v1';
+    final baseUrl =
+        dotenv.env['GROQ_BASE_URL'] ?? 'https://api.groq.com/openai/v1';
     final apiKey = dotenv.env['GROQ_API_KEY'] ?? '';
 
     final dio = Dio(
       BaseOptions(
         baseUrl: baseUrl,
-        connectTimeout: const Duration(milliseconds: AppConstants.connectTimeout),
-        receiveTimeout: const Duration(milliseconds: AppConstants.receiveTimeout),
+        connectTimeout:
+            const Duration(milliseconds: AppConstants.connectTimeout),
+        receiveTimeout:
+            const Duration(milliseconds: AppConstants.receiveTimeout),
         contentType: 'application/json',
         headers: {
           'Authorization': 'Bearer $apiKey',
@@ -170,7 +195,8 @@ AppException handleDioException(DioException e) {
       final message = e.response?.data?['detail'] ??
           e.response?.data?['message'] ??
           'Server error occurred';
-      return ServerException(message: message.toString(), statusCode: statusCode);
+      return ServerException(
+          message: message.toString(), statusCode: statusCode);
 
     default:
       return ServerException(message: e.message ?? 'Unexpected error occurred');

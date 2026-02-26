@@ -22,6 +22,7 @@ import 'package:get_it/get_it.dart';
 import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mockmate/core/network/dio_client.dart';
+import 'package:mockmate/core/network/connectivity_service.dart';
 
 // Auth feature
 import 'package:mockmate/features/auth/data/datasources/auth_remote_datasource.dart';
@@ -91,6 +92,9 @@ Future<void> setupDependencies() async {
     DioFactory.createGroqDio(logger: sl()),
     instanceName: 'groqDio',
   );
+
+  // Connectivity service for offline detection
+  sl.registerLazySingleton(() => ConnectivityService());
 
   // ── Auth Feature ──────────────────────────────────────────────────────────
   sl.registerLazySingleton<AuthRemoteDataSource>(

@@ -1,4 +1,4 @@
-/// AppTextField — Styled text input field with validation support.
+/// AppTextField — Styled text input field with full keyboard control support.
 library;
 
 import 'package:flutter/material.dart';
@@ -14,6 +14,9 @@ class AppTextField extends StatefulWidget {
   final int maxLines;
   final bool enabled;
   final void Function(String)? onChanged;
+  final void Function(String)? onSubmitted;
+  final TextInputAction? textInputAction;
+  final FocusNode? focusNode;
 
   const AppTextField({
     super.key,
@@ -27,6 +30,9 @@ class AppTextField extends StatefulWidget {
     this.maxLines = 1,
     this.enabled = true,
     this.onChanged,
+    this.onSubmitted,
+    this.textInputAction,
+    this.focusNode,
   });
 
   @override
@@ -48,6 +54,9 @@ class _AppTextFieldState extends State<AppTextField> {
       maxLines: widget.isPassword ? 1 : widget.maxLines,
       enabled: widget.enabled,
       onChanged: widget.onChanged,
+      onFieldSubmitted: widget.onSubmitted,
+      textInputAction: widget.textInputAction,
+      focusNode: widget.focusNode,
       style: theme.textTheme.bodyLarge,
       decoration: InputDecoration(
         labelText: widget.label,
@@ -56,7 +65,9 @@ class _AppTextFieldState extends State<AppTextField> {
         suffixIcon: widget.isPassword
             ? IconButton(
                 icon: Icon(
-                  _obscureText ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                  _obscureText
+                      ? Icons.visibility_off_outlined
+                      : Icons.visibility_outlined,
                 ),
                 onPressed: () => setState(() => _obscureText = !_obscureText),
               )
