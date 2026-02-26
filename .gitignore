@@ -49,3 +49,7 @@ app.*.map.json
 # Analysis output (local only)
 analyze_output*.txt
 build_output*.txt
+
+# Python virtual environment (backend related)
+venv/
+__pycache__/

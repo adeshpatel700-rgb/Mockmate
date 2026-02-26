@@ -1,0 +1,384 @@
+#═══════════════════════════════════════════════════════════════════════════════
+# 📚 **GITHUB ACTIONS CI/CD PIPELINE - TEACHING GUIDE**
+#═══════════════════════════════════════════════════════════════════════════════
+#
+# 🎓 **WHAT IS THIS FILE?**
+# This is a GitHub Actions workflow that automatically:
+#   1. Tests your code whenever you push/make a PR
+#   2. Analyzes code quality with Flutter's analyzer
+#   3. Builds Android APK on successful tests
+#   4. Can be extended to auto-deploy to stores
+#
+# 🤔 **WHY DO WE NEED THIS?**
+# - **Safety Net**: Catches bugs before users see them
+# - **Code Quality**: Ensures coding standards are maintained
+# - **Automation**: No manual testing needed on every commit
+# - **Confidence**: Merge code knowing tests pass
+# - **Documentation**: Shows what "passing" means for your project
+#
+# 📖 **HOW DOES IT WORK?**
+# GitHub Actions uses "runners" (virtual machines) that:
+#   1. Checkout your code
+#   2. Install Flutter & dependencies
+#   3. Run your defined steps (test, build, etc.)
+#   4. Report results back to GitHub
+#
+# 💡 **KEY CONCEPTS EXPLAINED:**
+# - `on:` = When should this workflow run?
+# - `jobs:` = What tasks should be executed?
+# - `steps:` = Sequential commands within a job
+# - `uses:` = Pre-built actions from GitHub marketplace
+# - `run:` = Shell commands to execute
+#
+# 🔧 **CUSTOMIZATION GUIDE:**
+# - Change Flutter version at `flutter-version: '3.24.0'`
+# - Add deployment steps after `build` job
+# - Modify cache keys if dependencies change frequently
+# - Add `secrets:` section for API keys/deployment credentials
+#
+#═══════════════════════════════════════════════════════════════════════════════
+
+name: MockMate CI/CD Pipeline
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 📌 **TRIGGER CONFIGURATION**
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 🎓 EXPLANATION:
+# - `push:` = Run on every commit to specified branches
+# - `pull_request:` = Run when someone opens a PR to these branches
+# - `branches: [master, main, develop]` = Only monitor these branches
+#   (adjust based on your branching strategy)
+#
+# 💡 WHY BOTH PUSH AND PR?
+# - Push: Fast feedback for developers committing directly
+# - PR: Validation before merging (prevents broken code in main branch)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+on:
+  push:
+    branches: [master, main, develop]
+  pull_request:
+    branches: [master, main, develop]
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 🔒 **PERMISSIONS**
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 🎓 EXPLANATION:
+# GitHub Actions security model requires explicit permissions.
+# - `contents: read` = Can read your repository code
+# - `checks: write` = Can write test results to GitHub UI
+# 
+# 🔐 WHY MINIMAL PERMISSIONS?
+# Security best practice: Only grant what's needed. If your token is
+# compromised, it can't modify code or settings.
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+permissions:
+  contents: read
+  checks: write
+
+jobs:
+  # ═════════════════════════════════════════════════════════════════════════════
+  # 🧪 JOB 1: ANALYZE & TEST
+  # ═════════════════════════════════════════════════════════════════════════════
+  # 🎓 PURPOSE:
+  # Validates code quality and runs all unit/widget tests.
+  # Fails the pipeline if:
+  #   - Static analysis finds errors (flutter analyze)
+  #   - Any test fails (flutter test)
+  #
+  # 💡 WHY FIRST?
+  # No point building APKs if code doesn't compile or tests fail.
+  # This saves time and compute resources.
+  # ═════════════════════════════════════════════════════════════════════════════
+  
+  analyze-and-test:
+    name: 📊 Code Analysis & Testing
+    runs-on: ubuntu-latest  # 🎓 Use Ubuntu Linux runner (free for public repos)
+    
+    steps:
+      # ─────────────────────────────────────────────────────────────────────────
+      # ✅ STEP 1: CHECKOUT CODE
+      # ─────────────────────────────────────────────────────────────────────────
+      # 🎓 WHAT: Downloads your repository code to the runner
+      # 📖 WHY: Actions start with empty machines; need code to analyze
+      # 🔤 `actions/checkout@v4` is an official GitHub action
+      # ─────────────────────────────────────────────────────────────────────────
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+      
+      # ─────────────────────────────────────────────────────────────────────────
+      # ✅ STEP 2: SETUP FLUTTER SDK
+      # ─────────────────────────────────────────────────────────────────────────
+      # 🎓 WHAT: Installs Flutter SDK on the runner
+      # 📖 WHY: Need Flutter to run `flutter analyze` and `flutter test`
+      # 🔢 VERSION: Using 3.24.0 (update to match pubspec.yaml)
+      # 📦 CHANNEL: `stable` ensures production-ready Flutter
+      # 
+      # 💡 CACHE: `cache: true` saves 2-3 minutes per run by reusing
+      #    Flutter SDK downloads between workflow runs
+      # ─────────────────────────────────────────────────────────────────────────
+      - name: 🐦 Setup Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+          cache: true
+      
+      # ─────────────────────────────────────────────────────────────────────────
+      # ✅ STEP 3: INSTALL DEPENDENCIES
+      # ─────────────────────────────────────────────────────────────────────────
+      # 🎓 WHAT: Downloads all packages from pubspec.yaml
+      # 📖 WHY: Your code imports these packages; they must exist to analyze/test
+      # ⚡ SPEED: Takes 30-60 seconds depending on package count
+      # ─────────────────────────────────────────────────────────────────────────
+      - name: 📦 Install Dependencies
+        run: flutter pub get
+      
+      # ─────────────────────────────────────────────────────────────────────────
+      # ✅ STEP 4: VERIFY FLUTTER INSTALLATION
+      # ─────────────────────────────────────────────────────────────────────────
+      # 🎓 WHAT: Shows Flutter version and diagnostics
+      # 📖 WHY: Helps debug if something goes wrong; validates setup
+      # 🔍 OUTPUT: Visible in GitHub Actions logs for troubleshooting
+      # ─────────────────────────────────────────────────────────────────────────
+      - name: 🔍 Verify Flutter Installation
+        run: flutter doctor -v
+      
+      # ─────────────────────────────────────────────────────────────────────────
+      # ✅ STEP 5: CODE GENERATION (if needed)
+      # ─────────────────────────────────────────────────────────────────────────
+      # 🎓 WHAT: Runs build_runner to generate code (freezed, json, etc.)
+      # 📖 WHY: Some packages need generated files to compile
+      # 🚫 If you don't use build_runner/freezed/json_serializable, remove this
+      # 
+      # ⚠️ CURRENTLY COMMENTED OUT - Enable if you add code generation packages
+      # ─────────────────────────────────────────────────────────────────────────
+      # - name: 🔨 Generate Code
+      #   run: flutter pub run build_runner build --delete-conflicting-outputs
+      
+      # ─────────────────────────────────────────────────────────────────────────
+      # ✅ STEP 6: STATIC ANALYSIS
+      # ─────────────────────────────────────────────────────────────────────────
+      # 🎓 WHAT: Runs Dart analyzer based on analysis_options.yaml
+      # 📖 WHY: Catches errors, warns about bad practices, enforces style
+      # 🎯 FAILS PIPELINE IF: Any error-level issues found
+      # 
+      # 💡 WHAT IT CHECKS:
+      # - Syntax errors
+      # - Type mismatches
+      # - Unused imports
+      # - Code smells (based on your linter rules)
+      # 
+      # 🔧 CUSTOMIZE: Edit `analysis_options.yaml` to change rules
+      # ─────────────────────────────────────────────────────────────────────────
+      - name: 🔬 Run Static Analysis
+        run: flutter analyze --no-fatal-infos
+        # 🎓 `--no-fatal-infos` = Only fail on warnings/errors, not info messages
+      
+      # ─────────────────────────────────────────────────────────────────────────
+      # ✅ STEP 7: FORMAT CHECK
+      # ─────────────────────────────────────────────────────────────────────────
+      # 🎓 WHAT: Checks if code follows Dart formatting rules
+      # 📖 WHY: Maintains consistent style across team
+      # 🎯 FAILS PIPELINE IF: Code isn't properly formatted
+      # 
+      # 💡 FIX LOCALLY: Run `dart format lib test` before committing
+      # ─────────────────────────────────────────────────────────────────────────
+      - name: 🎨 Check Code Formatting
+        run: dart format --set-exit-if-changed lib test
+      
+      # ─────────────────────────────────────────────────────────────────────────
+      # ✅ STEP 8: RUN TESTS
+      # ─────────────────────────────────────────────────────────────────────────
+      # 🎓 WHAT: Executes all test files in `test/` directory
+      # 📖 WHY: Validates business logic works as expected
+      # 🎯 FAILS PIPELINE IF: Any test fails
+      # 
+      # 💡 TEST TYPES:
+      # - Unit tests: Test individual functions/classes
+      # - Widget tests: Test UI components
+      # - Integration tests: Test full app flows (add with `--integration` flag)
+      # 
+      # 📊 COVERAGE: Add `--coverage` flag to generate reports
+      # ─────────────────────────────────────────────────────────────────────────
+      - name: 🧪 Run Tests
+        run: flutter test --reporter expanded
+        # 🎓 `--reporter expanded` = Shows detailed test names and durations
+      
+      # ─────────────────────────────────────────────────────────────────────────
+      # ✅ STEP 9: TEST COVERAGE (OPTIONAL)
+      # ─────────────────────────────────────────────────────────────────────────
+      # 🎓 WHAT: Generates code coverage report (% of code tested)
+      # 📖 WHY: Identifies untested code paths
+      # 🎯 GOAL: Aim for 70-80% coverage minimum
+      # 
+      # ⚠️ CURRENTLY COMMENTED OUT - Enable to track coverage
+      # 📊 Can upload to coveralls.io or codecov.io for visual reports
+      # ─────────────────────────────────────────────────────────────────────────
+      # - name: 📊 Generate Coverage Report
+      #   run: flutter test --coverage
+      # 
+      # - name: 📤 Upload Coverage to Codecov
+      #   uses: codecov/codecov-action@v3
+      #   with:
+      #     files: ./coverage/lcov.info
+
+  # ═════════════════════════════════════════════════════════════════════════════
+  # 📱 JOB 2: BUILD ANDROID APK
+  # ═════════════════════════════════════════════════════════════════════════════
+  # 🎓 PURPOSE:
+  # Builds production Android APK after tests pass.
+  # Uploads artifact for download/deployment.
+  #
+  # 💡 WHY SEPARATE JOB?
+  # - Only runs if analyze-and-test succeeds
+  # - Can run in parallel with iOS build job (add later)
+  # - Keeps concerns separated (test vs build)
+  # 
+  # 🚀 FUTURE: Add deployment steps to Firebase App Distribution or Play Store
+  # ═════════════════════════════════════════════════════════════════════════════
+  
+  build-android:
+    name: 🤖 Build Android APK
+    runs-on: ubuntu-latest
+    needs: analyze-and-test  # 🎓 Only runs if analyze-and-test succeeds
+    
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+      
+      # ─────────────────────────────────────────────────────────────────────────
+      # ✅ SETUP JAVA FOR ANDROID BUILD
+      # ─────────────────────────────────────────────────────────────────────────
+      # 🎓 WHAT: Installs Java JDK (required for Android builds)
+      # 📖 WHY: Android uses Gradle build system which needs Java
+      # 🔢 VERSION: Java 17 (LTS version recommended for Flutter 3.x)
+      # 📦 DISTRIBUTION: 'temurin' = Eclipse Temurin (free, maintained)
+      # ─────────────────────────────────────────────────────────────────────────
+      - name: ☕ Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      
+      - name: 🐦 Setup Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+          cache: true
+      
+      - name: 📦 Install Dependencies
+        run: flutter pub get
+      
+      # ─────────────────────────────────────────────────────────────────────────
+      # ✅ CREATE .ENV FILE FOR BUILD
+      # ─────────────────────────────────────────────────────────────────────────
+      # 🎓 WHAT: Creates .env file with secrets from GitHub Secrets
+      # 📖 WHY: Your app needs API keys but .env is gitignored
+      # 🔐 SECURITY: Never commit .env! Use GitHub Secrets instead
+      # 
+      # 🔧 SETUP REQUIRED:
+      # 1. Go to GitHub repo → Settings → Secrets → Actions
+      # 2. Add secret: GROQ_API_KEY with your key value
+      # 3. Add secret: BASE_URL with your backend URL
+      # 
+      # ⚠️ CURRENTLY COMMENTED - Enable after adding secrets to GitHub
+      # ─────────────────────────────────────────────────────────────────────────
+      # - name: 🔐 Create .env File
+      #   run: |
+      #     echo "GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}" > .env
+      #     echo "BASE_URL=${{ secrets.BASE_URL }}" >> .env
+      
+      # ─────────────────────────────────────────────────────────────────────────
+      # ✅ BUILD APK
+      # ─────────────────────────────────────────────────────────────────────────
+      # 🎓 WHAT: Compiles Dart → Native Android APK
+      # 📖 WHY: Creates installable app package
+      # 🎯 OUTPUT: build/app/outputs/flutter-apk/app-release.apk
+      # 
+      # 💡 BUILD MODES:
+      # - `--release` = Optimized for production (smaller, faster)
+      # - `--debug` = For testing (larger, with debug tools)
+      # - `--profile` = For performance profiling
+      # 
+      # 📱 APK vs AAB:
+      # - APK = Direct install (sideloading, testing)
+      # - AAB = Upload to Play Store (Google's preferred format)
+      #   Use `flutter build appbundle --release` for Play Store
+      # ─────────────────────────────────────────────────────────────────────────
+      - name: 🔨 Build Android APK
+        run: flutter build apk --release
+      
+      # ─────────────────────────────────────────────────────────────────────────
+      # ✅ UPLOAD APK AS ARTIFACT
+      # ─────────────────────────────────────────────────────────────────────────
+      # 🎓 WHAT: Saves APK to GitHub Actions for download
+      # 📖 WHY: Team can download builds from GitHub UI
+      # ⏰ RETENTION: Stored for 90 days by default
+      # 
+      # 📥 HOW TO DOWNLOAD:
+      # 1. Go to Actions tab in GitHub
+      # 2. Click on your workflow run
+      # 3. Scroll to "Artifacts" section
+      # 4. Download "mockmate-android-apk"
+      # ─────────────────────────────────────────────────────────────────────────
+      - name: 📤 Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mockmate-android-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 30  # 🎓 Keep for 30 days (adjust as needed)
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 🚀 **NEXT STEPS & ENHANCEMENTS**
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# 📋 **IMMEDIATE IMPROVEMENTS:**
+# 1. Add GitHub Secrets:
+#    - GROQ_API_KEY
+#    - BASE_URL
+#    Then uncomment the "Create .env File" step
+#
+# 2. Enable Coverage Tracking:
+#    Uncomment coverage steps and add Codecov integration
+#
+# 📲 **DEPLOYMENT OPTIONS:**
+# 
+# A) Firebase App Distribution (Beta Testing):
+#    - name: 🔥 Deploy to Firebase
+#      uses: wzieba/Firebase-Distribution-Github-Action@v1
+#      with:
+#        appId: ${{ secrets.FIREBASE_APP_ID }}
+#        serviceCredentialsFileContent: ${{ secrets.FIREBASE_CREDENTIALS }}
+#        groups: testers
+#        file: build/app/outputs/flutter-apk/app-release.apk
+#
+# B) Google Play Store (Production):
+#    - name: 🏪 Deploy to Play Store
+#      uses: r0adkll/upload-google-play@v1
+#      with:
+#        serviceAccountJsonPlainText: ${{ secrets.PLAY_STORE_CREDENTIALS }}
+#        packageName: com.mockmate.app
+#        releaseFiles: build/app/outputs/bundle/release/app-release.aab
+#        track: internal  # or 'beta', 'production'
+#
+# 🍎 **ADD iOS BUILD:**
+# - Requires macOS runner (`runs-on: macos-latest`)
+# - Needs Apple Developer certificates (complex setup)
+# - Use fastlane for easier iOS automation
+#
+# 📊 **NOTIFICATIONS:**
+# Add Slack/Discord notifications on build success/failure:
+#    - name: 📢 Notify Team
+#      uses: 8398a7/action-slack@v3
+#      with:
+#        status: ${{ job.status }}
+#        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+#
+# 🎯 **BRANCH PROTECTION:**
+# In GitHub settings, enable "Require status checks to pass" on main/master
+# This prevents merging if CI fails.
+#
+# ═══════════════════════════════════════════════════════════════════════════════
