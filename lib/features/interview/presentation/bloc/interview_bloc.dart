@@ -6,6 +6,7 @@ import 'package:equatable/equatable.dart';
 import 'package:uuid/uuid.dart';
 import 'package:mockmate/features/interview/domain/entities/interview_entities.dart';
 import 'package:mockmate/features/interview/domain/usecases/generate_questions_usecase.dart';
+import 'package:mockmate/features/interview/domain/usecases/submit_answer_usecase.dart';
 
 // ── Events ─────────────────────────────────────────────────────────────────
 
@@ -70,7 +71,8 @@ class InterviewInProgress extends InterviewState {
   });
 
   Question get currentQuestion => session.questions[currentQuestionIndex];
-  bool get isLastQuestion => currentQuestionIndex == session.questions.length - 1;
+  bool get isLastQuestion =>
+      currentQuestionIndex == session.questions.length - 1;
 
   @override
   List<Object> get props => [session, currentQuestionIndex];
@@ -100,7 +102,8 @@ class FeedbackReceived extends InterviewState {
     required this.feedback,
   });
 
-  bool get isLastQuestion => currentQuestionIndex == session.questions.length - 1;
+  bool get isLastQuestion =>
+      currentQuestionIndex == session.questions.length - 1;
 
   @override
   List<Object> get props => [session, currentQuestionIndex, feedback];
@@ -144,7 +147,8 @@ class InterviewBloc extends Bloc<InterviewEvent, InterviewState> {
     StartInterview event,
     Emitter<InterviewState> emit,
   ) async {
-    emit(const InterviewLoading(message: 'Generating your questions with AI...'));
+    emit(const InterviewLoading(
+        message: 'Generating your questions with AI...'));
 
     final result = await _generateQuestionsUseCase(
       GenerateQuestionsParams(
@@ -185,7 +189,8 @@ class InterviewBloc extends Bloc<InterviewEvent, InterviewState> {
       ..[currentQuestion.id] = event.answer;
     final updatedSession = session.copyWith(answers: updatedAnswers);
 
-    emit(AnswerSubmitting(session: updatedSession, currentQuestionIndex: currentIndex));
+    emit(AnswerSubmitting(
+        session: updatedSession, currentQuestionIndex: currentIndex));
 
     // Get AI feedback
     final result = await _submitAnswerUseCase(
@@ -199,9 +204,11 @@ class InterviewBloc extends Bloc<InterviewEvent, InterviewState> {
     result.fold(
       (failure) => emit(InterviewError(failure.message)),
       (feedback) {
-        final updatedFeedbacks = Map<String, AnswerFeedback>.from(updatedSession.feedbacks)
-          ..[currentQuestion.id] = feedback;
-        final sessionWithFeedback = updatedSession.copyWith(feedbacks: updatedFeedbacks);
+        final updatedFeedbacks =
+            Map<String, AnswerFeedback>.from(updatedSession.feedbacks)
+              ..[currentQuestion.id] = feedback;
+        final sessionWithFeedback =
+            updatedSession.copyWith(feedbacks: updatedFeedbacks);
         emit(FeedbackReceived(
           session: sessionWithFeedback,
           currentQuestionIndex: currentIndex,
@@ -221,7 +228,8 @@ class InterviewBloc extends Bloc<InterviewEvent, InterviewState> {
     if (nextIndex >= session.questions.length) {
       // Calculate final score as average of all feedback scores
       final scores = session.feedbacks.values.map((f) => f.score).toList();
-      final avgScore = scores.isEmpty ? 0.0 : scores.reduce((a, b) => a + b) / scores.length;
+      final avgScore =
+          scores.isEmpty ? 0.0 : scores.reduce((a, b) => a + b) / scores.length;
 
       emit(InterviewCompleted(
         session.copyWith(
@@ -230,7 +238,8 @@ class InterviewBloc extends Bloc<InterviewEvent, InterviewState> {
         ),
       ));
     } else {
-      emit(InterviewInProgress(session: session, currentQuestionIndex: nextIndex));
+      emit(InterviewInProgress(
+          session: session, currentQuestionIndex: nextIndex));
     }
   }
 

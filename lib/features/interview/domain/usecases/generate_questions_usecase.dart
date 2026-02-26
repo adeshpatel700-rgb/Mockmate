@@ -1,4 +1,4 @@
-/// Interview Use Cases.
+/// Generate Questions Use Case — requests interview questions from AI.
 library;
 
 import 'package:dartz/dartz.dart';
@@ -33,36 +33,6 @@ class GenerateQuestionsUseCase {
       role: params.role,
       difficulty: params.difficulty,
       count: params.count,
-    );
-  }
-}
-
-// ── Submit Answer ──────────────────────────────────────────────────────────
-
-class SubmitAnswerParams extends Equatable {
-  final String question;
-  final String answer;
-  final String role;
-
-  const SubmitAnswerParams({
-    required this.question,
-    required this.answer,
-    required this.role,
-  });
-
-  @override
-  List<Object> get props => [question, answer, role];
-}
-
-class SubmitAnswerUseCase {
-  final InterviewRepository _repository;
-  const SubmitAnswerUseCase(this._repository);
-
-  Future<Either<Failure, AnswerFeedback>> call(SubmitAnswerParams params) {
-    return _repository.submitAnswer(
-      question: params.question,
-      answer: params.answer,
-      role: params.role,
     );
   }
 }
