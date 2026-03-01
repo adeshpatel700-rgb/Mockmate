@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "51306589500",
+    "project_id": "mockmate-73ebe",
+    "storage_bucket": "mockmate-73ebe.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:51306589500:android:5f754530ab4778a5750239",
+        "android_client_info": {
+          "package_name": "com.adesh.mockmate"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCdF9eDuUAj9y4uM-gGXb3rBnij_xj9se8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:51306589500:android:6365860f2b9b5824750239",
+        "android_client_info": {
+          "package_name": "come.mockmate.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCdF9eDuUAj9y4uM-gGXb3rBnij_xj9se8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

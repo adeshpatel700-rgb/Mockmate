@@ -1,15 +1,24 @@
-/// Register Screen — similar to Login but with name + password confirmation.
+/// Register Screen — Premium Account Creation Experience
+///
+/// Features:
+/// - Premium design with design tokens
+/// - Specialized input fields (AppEmailField, AppPasswordField)
+/// - Content guidelines integration
+/// - Enhanced validation and error handling
+/// - Loading states with AppToast
 library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mockmate/core/constants/copy_guidelines.dart';
 import 'package:mockmate/core/di/injection_container.dart';
 import 'package:mockmate/core/router/app_router.dart';
+import 'package:mockmate/core/theme/design_tokens.dart';
 import 'package:mockmate/core/widgets/app_button.dart';
-import 'package:mockmate/core/widgets/app_loader.dart';
 import 'package:mockmate/core/widgets/app_text_field.dart';
+import 'package:mockmate/core/widgets/app_toast.dart';
 import 'package:mockmate/features/auth/presentation/bloc/auth_bloc.dart';
 
 class RegisterScreen extends StatelessWidget {
@@ -52,62 +61,79 @@ class _RegisterViewState extends State<_RegisterView> {
     if (_formKey.currentState?.validate() ?? false) {
       HapticFeedback.lightImpact();
       context.read<AuthBloc>().add(
-        RegisterRequested(
-          name: _nameController.text.trim(),
-          email: _emailController.text.trim(),
-          password: _passwordController.text,
-        ),
-      );
+            RegisterRequested(
+              name: _nameController.text.trim(),
+              email: _emailController.text.trim(),
+              password: _passwordController.text,
+            ),
+          );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return BlocConsumer<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is Authenticated) {
           context.go(AppRoutes.dashboard);
         } else if (state is AuthError) {
-          AppSnackBar.showError(context, state.message);
+          AppToast.error(
+            context,
+            message: state.message,
+          );
         }
       },
       builder: (context, state) {
+        final isLoading = state is AuthLoading;
+
         return Scaffold(
           body: SafeArea(
             child: SingleChildScrollView(
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 48),
+              padding: EdgeInsets.symmetric(
+                horizontal: AppSpacing.x3l.toDouble(),
+                vertical: AppSpacing.x5l.toDouble(),
+              ),
               child: Form(
                 key: _formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Back button
                     IconButton(
                       onPressed: () => context.canPop()
                           ? context.pop()
                           : context.go(AppRoutes.onboarding),
                       icon: const Icon(Icons.arrow_back_rounded),
                       style: IconButton.styleFrom(
-                        backgroundColor: theme.colorScheme.surface,
+                        backgroundColor: AppColors.darkSurface,
+                        padding: EdgeInsets.all(AppSpacing.m.toDouble()),
                       ),
                     ),
 
-                    const SizedBox(height: 40),
+                    SizedBox(height: AppSpacing.x4l.toDouble()),
+
+                    // Headline
+                    Text(
+                      HeadlineLibrary.registerHeadline,
+                      style: AppTypography.displayL.copyWith(
+                        height: 1.1,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+
+                    SizedBox(height: AppSpacing.s.toDouble()),
 
                     Text(
-                      'Create\naccount ✨',
-                      style: theme.textTheme.displayMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Start your interview journey today.',
-                      style: theme.textTheme.bodyMedium,
+                      HeadlineLibrary.registerSubheadline,
+                      style: AppTypography.bodyL.copyWith(
+                        color: AppColors.neutral400,
+                      ),
                     ),
 
-                    const SizedBox(height: 48),
+                    SizedBox(height: AppSpacing.x5l.toDouble()),
 
+                    // Full Name field
                     AppTextField(
                       label: 'Full Name',
                       hint: 'Adesh Patel',
@@ -115,79 +141,82 @@ class _RegisterViewState extends State<_RegisterView> {
                       prefixIcon: Icons.person_outline_rounded,
                       textInputAction: TextInputAction.next,
                       validator: (v) {
-                        if (v == null || v.isEmpty) return 'Name is required';
-                        if (v.length < 2) return 'Name too short';
-                        return null;
-                      },
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    AppTextField(
-                      label: 'Email',
-                      hint: 'you@example.com',
-                      controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      prefixIcon: Icons.email_outlined,
-                      textInputAction: TextInputAction.next,
-                      validator: (v) {
-                        if (v == null || v.isEmpty) return 'Email is required';
-                        if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(v)) {
-                          return 'Enter a valid email';
+                        if (v == null || v.isEmpty) {
+                          return ErrorMessages.nameRequired;
+                        }
+                        if (v.length < 2) {
+                          return ErrorMessages.nameTooShort;
                         }
                         return null;
                       },
                     ),
 
-                    const SizedBox(height: 16),
+                    SizedBox(height: AppSpacing.l.toDouble()),
 
-                    AppTextField(
-                      label: 'Password',
-                      controller: _passwordController,
-                      isPassword: true,
-                      prefixIcon: Icons.lock_outline_rounded,
-                      textInputAction: TextInputAction.next,
-                      validator: (v) {
-                        if (v == null || v.isEmpty) return 'Password is required';
-                        if (v.length < 8) return 'At least 8 characters required';
-                        return null;
+                    // Email field
+                    AppEmailField(
+                      controller: _emailController,
+                      onSubmitted: (_) {
+                        FocusScope.of(context).nextFocus();
                       },
                     ),
 
-                    const SizedBox(height: 16),
+                    SizedBox(height: AppSpacing.l.toDouble()),
 
+                    // Password field
+                    AppPasswordField(
+                      controller: _passwordController,
+                      onSubmitted: (_) {
+                        FocusScope.of(context).nextFocus();
+                      },
+                    ),
+
+                    SizedBox(height: AppSpacing.l.toDouble()),
+
+                    // Confirm Password field
                     AppTextField(
-                      label: 'Confirm Password',
                       controller: _confirmPasswordController,
                       isPassword: true,
+                      label: 'Confirm Password',
+                      hint: 'Re-enter your password',
                       prefixIcon: Icons.lock_outline_rounded,
                       textInputAction: TextInputAction.done,
                       onSubmitted: (_) => _onRegisterPressed(context),
                       validator: (v) {
-                        if (v == null || v.isEmpty) return 'Please confirm your password';
+                        if (v == null || v.isEmpty) {
+                          return ErrorMessages.passwordRequired;
+                        }
                         if (v != _passwordController.text) {
-                          return 'Passwords do not match';
+                          return ErrorMessages.passwordsMismatch;
                         }
                         return null;
                       },
                     ),
 
-                    const SizedBox(height: 40),
+                    SizedBox(height: AppSpacing.xxl.toDouble()),
 
-                    AppPrimaryButton(
-                      label: 'Create Account',
-                      isLoading: state is AuthLoading,
-                      onPressed: () => _onRegisterPressed(context),
+                    // Register button
+                    AppButton(
+                      label: CTALibrary.createAccount,
+                      onPressed:
+                          isLoading ? null : () => _onRegisterPressed(context),
+                      isLoading: isLoading,
+                      variant: ButtonVariant.primary,
+                      size: ButtonSize.large,
+                      isFullWidth: true,
                     ),
 
-                    const SizedBox(height: 40),
+                    SizedBox(height: AppSpacing.x4l.toDouble()),
 
+                    // Login link
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
                           'Already have an account? ',
-                          style: theme.textTheme.bodyMedium,
+                          style: AppTypography.bodyM.copyWith(
+                            color: AppColors.neutral400,
+                          ),
                         ),
                         TextButton(
                           onPressed: () => context.go(AppRoutes.login),
@@ -198,8 +227,8 @@ class _RegisterViewState extends State<_RegisterView> {
                           ),
                           child: Text(
                             'Log In',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.primary,
+                            style: AppTypography.bodyM.copyWith(
+                              color: AppColors.primary500,
                               fontWeight: FontWeight.w600,
                             ),
                           ),

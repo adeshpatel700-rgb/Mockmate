@@ -1,21 +1,26 @@
-/// Main Dashboard Screen — home of the app.
+/// Main Dashboard Screen — Premium Home Experience
 ///
-/// UX Fixes:
-/// - SliverAppBar replaced with a simple pinned header — avoids collapsed text overlap
-/// - Stat cards show ↑ trend indicator
-/// - History tiles are tappable (visual feedback)
-/// - withValues() replacing deprecated withOpacity()
-/// - Empty state is more engaging
+/// Features:
+/// - Premium stat cards with AppStatCard
+/// - Design token integration throughout
+/// - Content guidelines for messaging
+/// - Enhanced empty states with AppEmptyState
+/// - Premium card components
+/// - Improved typography and spacing
 library;
 
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:gap/gap.dart';
-import 'package:fl_chart/fl_chart.dart';
+import 'package:go_router/go_router.dart';
+import 'package:mockmate/core/constants/copy_guidelines.dart';
 import 'package:mockmate/core/di/injection_container.dart';
 import 'package:mockmate/core/router/app_router.dart';
+import 'package:mockmate/core/theme/design_tokens.dart';
+import 'package:mockmate/core/widgets/app_card.dart';
+import 'package:mockmate/core/widgets/app_empty_state.dart';
 import 'package:mockmate/core/widgets/app_loader.dart';
 import 'package:mockmate/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:mockmate/features/dashboard/domain/entities/dashboard_entities.dart';
@@ -43,8 +48,6 @@ class _DashboardView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is Unauthenticated) {
@@ -61,15 +64,15 @@ class _DashboardView extends StatelessWidget {
                 },
                 child: CustomScrollView(
                   slivers: [
-                    // ── Pinned App Bar (no FlexibleSpaceBar collapse bugs) ──
+                    // ── Pinned App Bar ────────────────────────────────────
                     SliverAppBar(
                       pinned: true,
                       floating: false,
                       expandedHeight: 0,
                       elevation: 0,
                       scrolledUnderElevation: 0.5,
-                      backgroundColor: theme.scaffoldBackgroundColor,
-                      titleSpacing: 24,
+                      backgroundColor: AppColors.darkBackground,
+                      titleSpacing: AppSpacing.x3l.toDouble(),
                       title: Row(
                         children: [
                           Image.asset(
@@ -78,27 +81,45 @@ class _DashboardView extends StatelessWidget {
                             height: 30,
                             filterQuality: FilterQuality.medium,
                           ),
-                          const SizedBox(width: 10),
+                          SizedBox(width: AppSpacing.xs.toDouble()),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
                                 'MockMate',
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  color: theme.colorScheme.primary,
+                                style: AppTypography.titleM.copyWith(
+                                  color: AppColors.primary500,
                                   fontWeight: FontWeight.w800,
                                 ),
                               ),
                               Text(
                                 'Ready to practice?',
-                                style: theme.textTheme.bodySmall,
+                                style: AppTypography.labelM.copyWith(
+                                  color: AppColors.neutral400,
+                                ),
                               ),
                             ],
                           ),
                         ],
                       ),
                       actions: [
+                        IconButton(
+                          icon: const Icon(Icons.person_outline_rounded),
+                          tooltip: 'Profile',
+                          onPressed: () {
+                            HapticFeedback.lightImpact();
+                            context.push(AppRoutes.profile);
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.settings_outlined),
+                          tooltip: 'Settings',
+                          onPressed: () {
+                            HapticFeedback.lightImpact();
+                            context.push(AppRoutes.settings);
+                          },
+                        ),
                         IconButton(
                           icon: const Icon(Icons.logout_rounded),
                           tooltip: 'Log out',
@@ -107,7 +128,7 @@ class _DashboardView extends StatelessWidget {
                             context.read<AuthBloc>().add(LogoutRequested());
                           },
                         ),
-                        const SizedBox(width: 8),
+                        SizedBox(width: AppSpacing.s.toDouble()),
                       ],
                     ),
 
@@ -144,9 +165,16 @@ class _DashboardView extends StatelessWidget {
             context.push(AppRoutes.roleSelection);
           },
           icon: const Icon(Icons.add_rounded),
-          label: const Text('New Interview'),
-          backgroundColor: Theme.of(context).colorScheme.primary,
+          label: Text(
+            CTALibrary.startInterview,
+            style: AppTypography.labelM.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          backgroundColor: AppColors.primary500,
           foregroundColor: Colors.white,
+          elevation: 4.0,
         ),
       ),
     );
@@ -163,71 +191,137 @@ class _DashboardContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return SliverPadding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.xl.toDouble(),
+        AppSpacing.l.toDouble(),
+        AppSpacing.xl.toDouble(),
+        100,
+      ),
       sliver: SliverList(
         delegate: SliverChildListDelegate([
-          // ── Stats Row ───────────────────────────────────────────────
+          // ── Quick Access Navigation ─────────────────────────────────
+          Text(
+            'Quick Access',
+            style: AppTypography.titleM.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          Gap(AppSpacing.m.toDouble()),
           Row(
             children: [
               Expanded(
-                child: _StatCard(
-                  label: 'Sessions',
-                  value: analytics.totalSessions.toString(),
-                  icon: Icons.history_rounded,
-                  color: theme.colorScheme.primary,
-                  trend: '+${analytics.totalSessions}',
+                child: _QuickAccessCard(
+                  icon: Icons.analytics_outlined,
+                  label: 'Analytics',
+                  color: AppColors.primary500,
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    context.push(AppRoutes.analytics);
+                  },
                 ),
               ),
-              const Gap(10),
+              Gap(AppSpacing.xs.toDouble()),
               Expanded(
-                child: _StatCard(
-                  label: 'Avg Score',
-                  value: '${analytics.averageScore.toStringAsFixed(0)}%',
-                  icon: Icons.bar_chart_rounded,
-                  color: const Color(0xFFF59E0B),
-                  trend: analytics.averageScore >= 70 ? '↑ Good' : '↗ Growing',
+                child: _QuickAccessCard(
+                  icon: Icons.book_outlined,
+                  label: 'Prep',
+                  color: AppColors.secondary500,
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    context.push(AppRoutes.interviewPrep);
+                  },
                 ),
               ),
-              const Gap(10),
+              Gap(AppSpacing.xs.toDouble()),
               Expanded(
-                child: _StatCard(
-                  label: 'Best',
-                  value: '${analytics.bestScore.toStringAsFixed(0)}%',
-                  icon: Icons.emoji_events_rounded,
-                  color: const Color(0xFF22C55E),
-                  trend: 'Personal best',
+                child: _QuickAccessCard(
+                  icon: Icons.leaderboard_outlined,
+                  label: 'Board',
+                  color: const Color(0xFFFFD700),
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    context.push(AppRoutes.leaderboard);
+                  },
+                ),
+              ),
+              Gap(AppSpacing.xs.toDouble()),
+              Expanded(
+                child: _QuickAccessCard(
+                  icon: Icons.help_outline_rounded,
+                  label: 'Help',
+                  color: AppColors.info500,
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    context.push(AppRoutes.help);
+                  },
                 ),
               ),
             ],
           ),
 
-          const Gap(28),
+          Gap(AppSpacing.xxl.toDouble() + 4),
+
+          // ── Stats Row ───────────────────────────────────────────────
+          Row(
+            children: [
+              Expanded(
+                child: AppStatCard(
+                  label: 'Sessions',
+                  value: analytics.totalSessions.toString(),
+                ),
+              ),
+              Gap(AppSpacing.xs.toDouble()),
+              Expanded(
+                child: AppStatCard(
+                  label: 'Avg Score',
+                  value: '${analytics.averageScore.toStringAsFixed(0)}%',
+                ),
+              ),
+              Gap(AppSpacing.xs.toDouble()),
+              Expanded(
+                child: AppStatCard(
+                  label: 'Best',
+                  value: '${analytics.bestScore.toStringAsFixed(0)}%',
+                ),
+              ),
+            ],
+          ),
+
+          Gap(AppSpacing.xxl.toDouble() + 4),
 
           // ── Weekly Progress Chart ────────────────────────────────────
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Weekly Progress', style: theme.textTheme.titleMedium),
+              Text(
+                'Weekly Progress',
+                style: AppTypography.titleM.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
               Text(
                 'Score (0–100)',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.primary,
+                style: AppTypography.labelM.copyWith(
+                  color: AppColors.primary400,
                 ),
               ),
             ],
           ),
-          const Gap(12),
+          Gap(AppSpacing.m.toDouble()),
           Container(
             height: 190,
-            padding: const EdgeInsets.fromLTRB(8, 16, 16, 8),
+            padding: EdgeInsets.fromLTRB(
+              AppSpacing.s.toDouble(),
+              AppSpacing.l.toDouble(),
+              AppSpacing.l.toDouble(),
+              AppSpacing.s.toDouble(),
+            ),
             decoration: BoxDecoration(
-              color: theme.colorScheme.surface,
-              borderRadius: BorderRadius.circular(16),
+              color: AppColors.darkSurface,
+              borderRadius: BorderRadius.circular(AppRadius.l),
               border: Border.all(
-                color: theme.colorScheme.outline.withValues(alpha: 0.18),
+                color: AppColors.neutral700.withOpacity(0.5),
               ),
             ),
             child: LineChart(
@@ -237,7 +331,7 @@ class _DashboardContent extends StatelessWidget {
                   drawVerticalLine: false,
                   horizontalInterval: 25,
                   getDrawingHorizontalLine: (v) => FlLine(
-                    color: theme.colorScheme.outline.withValues(alpha: 0.12),
+                    color: AppColors.neutral700.withOpacity(0.3),
                     strokeWidth: 1,
                   ),
                 ),
@@ -249,7 +343,9 @@ class _DashboardContent extends StatelessWidget {
                       reservedSize: 30,
                       getTitlesWidget: (v, _) => Text(
                         '${v.toInt()}',
-                        style: theme.textTheme.bodySmall,
+                        style: AppTypography.labelS.copyWith(
+                          color: AppColors.neutral400,
+                        ),
                       ),
                     ),
                   ),
@@ -266,8 +362,12 @@ class _DashboardContent extends StatelessWidget {
                         if (idx < 0 || idx >= days.length) {
                           return const SizedBox();
                         }
-                        return Text(days[idx],
-                            style: theme.textTheme.bodySmall);
+                        return Text(
+                          days[idx],
+                          style: AppTypography.labelS.copyWith(
+                            color: AppColors.neutral400,
+                          ),
+                        );
                       },
                     ),
                   ),
@@ -282,13 +382,13 @@ class _DashboardContent extends StatelessWidget {
                         .toList(),
                     isCurved: true,
                     curveSmoothness: 0.35,
-                    color: theme.colorScheme.primary,
+                    color: AppColors.primary500,
                     barWidth: 3,
                     dotData: FlDotData(
                       show: true,
                       getDotPainter: (spot, _, __, ___) => FlDotCirclePainter(
                         radius: 3,
-                        color: theme.colorScheme.primary,
+                        color: AppColors.primary500,
                         strokeWidth: 0,
                       ),
                     ),
@@ -298,8 +398,8 @@ class _DashboardContent extends StatelessWidget {
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          theme.colorScheme.primary.withValues(alpha: 0.18),
-                          theme.colorScheme.primary.withValues(alpha: 0.0),
+                          AppColors.primary500.withOpacity(0.15),
+                          AppColors.primary500.withOpacity(0.0),
                         ],
                       ),
                     ),
@@ -311,156 +411,42 @@ class _DashboardContent extends StatelessWidget {
             ),
           ),
 
-          const Gap(28),
+          Gap(AppSpacing.xxl.toDouble() + 4),
 
           // ── Recent History ───────────────────────────────────────────
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Recent Sessions', style: theme.textTheme.titleMedium),
+              Text(
+                'Recent Sessions',
+                style: AppTypography.titleM.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
               TextButton(
                 onPressed: () => context.push(AppRoutes.history),
-                child: const Text('See All →'),
-              ),
-            ],
-          ),
-          const Gap(8),
-
-          if (history.isEmpty)
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 32),
-                child: Column(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.psychology_outlined,
-                        size: 40,
-                        color: theme.colorScheme.primary,
-                      ),
-                    ),
-                    const Gap(16),
-                    Text(
-                      'No sessions yet',
-                      style: theme.textTheme.titleMedium,
-                    ),
-                    const Gap(6),
-                    Text(
-                      'Tap + to start your first interview!',
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.bodyMedium,
-                    ),
-                  ],
-                ),
-              ),
-            )
-          else
-            ...history.take(5).map((session) => _HistoryTile(session: session)),
-        ]),
-      ),
-    );
-  }
-}
-
-// ── Enhanced Stat Card Widget ─────────────────────────────────────────────
-
-class _StatCard extends StatelessWidget {
-  final String label;
-  final String value;
-  final IconData icon;
-  final Color color;
-  final String trend;
-
-  const _StatCard({
-    required this.label,
-    required this.value,
-    required this.icon,
-    required this.color,
-    required this.trend,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            color.withOpacity(0.1),
-            color.withOpacity(0.04),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: color.withOpacity(0.2),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.1),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.18),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(icon, size: 22, color: color),
-              ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(8),
-                ),
                 child: Text(
-                  trend,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: color,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 11,
+                  'See All →',
+                  style: AppTypography.labelM.copyWith(
+                    color: AppColors.primary400,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          Text(
-            value,
-            style: theme.textTheme.headlineMedium?.copyWith(
-              color: color,
-              fontWeight: FontWeight.w800,
-              fontSize: 28,
-              letterSpacing: -0.5,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
+          Gap(AppSpacing.s.toDouble()),
+
+          if (history.isEmpty)
+            Padding(
+              padding:
+                  EdgeInsets.symmetric(vertical: AppSpacing.x4l.toDouble()),
+              child: AppEmptyState.noSessions(
+                onAction: () => context.push(AppRoutes.roleSelection),
+              ),
+            )
+          else
+            ...history.take(5).map((session) => _HistoryTile(session: session)),
+        ]),
       ),
     );
   }
@@ -475,7 +461,6 @@ class _HistoryTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final score = session.score;
     final scoreColor = score >= 80
         ? const Color(0xFF22C55E)
@@ -484,22 +469,22 @@ class _HistoryTile extends StatelessWidget {
             : const Color(0xFFEF4444);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
+      margin: EdgeInsets.only(bottom: AppSpacing.xs.toDouble()),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
+        color: AppColors.darkSurface,
+        borderRadius: BorderRadius.circular(AppRadius.m),
         border: Border.all(
-          color: theme.colorScheme.outline.withValues(alpha: 0.15),
+          color: AppColors.neutral700.withOpacity(0.4),
         ),
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.m),
         child: InkWell(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.m),
           onTap: () => HapticFeedback.selectionClick(),
           child: Padding(
-            padding: const EdgeInsets.all(14),
+            padding: EdgeInsets.all(AppSpacing.m.toDouble()),
             child: Row(
               children: [
                 // Score badge
@@ -507,35 +492,41 @@ class _HistoryTile extends StatelessWidget {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: scoreColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
+                    color: scoreColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(AppRadius.m),
                     border: Border.all(
-                      color: scoreColor.withValues(alpha: 0.3),
+                      color: scoreColor.withOpacity(0.3),
                       width: 1.5,
                     ),
                   ),
                   child: Center(
                     child: Text(
                       '${score.toStringAsFixed(0)}',
-                      style: theme.textTheme.titleSmall?.copyWith(
+                      style: AppTypography.titleM.copyWith(
                         color: scoreColor,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
                 ),
-                const Gap(12),
+                Gap(AppSpacing.m.toDouble()),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(session.role,
-                          style: theme.textTheme.titleSmall,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis),
+                      Text(
+                        session.role,
+                        style: AppTypography.titleM.copyWith(
+                          color: AppColors.neutral100,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                       Text(
                         '${session.difficulty} · ${session.questionCount} questions',
-                        style: theme.textTheme.bodySmall,
+                        style: AppTypography.labelM.copyWith(
+                          color: AppColors.neutral400,
+                        ),
                       ),
                     ],
                   ),
@@ -545,13 +536,15 @@ class _HistoryTile extends StatelessWidget {
                   children: [
                     Text(
                       _formatDate(session.completedAt),
-                      style: theme.textTheme.bodySmall,
+                      style: AppTypography.labelM.copyWith(
+                        color: AppColors.neutral400,
+                      ),
                     ),
-                    const Gap(2),
+                    Gap(AppSpacing.xs.toDouble()),
                     Icon(
                       Icons.chevron_right_rounded,
                       size: 16,
-                      color: theme.colorScheme.outline,
+                      color: AppColors.neutral600,
                     ),
                   ],
                 ),
@@ -568,5 +561,58 @@ class _HistoryTile extends StatelessWidget {
     if (diff == 0) return 'Today';
     if (diff == 1) return 'Yesterday';
     return '${diff}d ago';
+  }
+}
+
+// ── Quick Access Card Widget ───────────────────────────────────────────────
+
+class _QuickAccessCard extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _QuickAccessCard({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      variant: CardVariant.elevated,
+      onTap: onTap,
+      child: Padding(
+        padding: EdgeInsets.symmetric(
+          vertical: AppSpacing.m.toDouble(),
+          horizontal: AppSpacing.xs.toDouble(),
+        ),
+        child: Column(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 22),
+            ),
+            Gap(AppSpacing.s.toDouble()),
+            Text(
+              label,
+              style: AppTypography.labelM.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

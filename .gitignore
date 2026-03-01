@@ -53,3 +53,6 @@ build_output*.txt
 # Python virtual environment (backend related)
 venv/
 __pycache__/
+
+# Firebase Service Account (NEVER commit this - it's a server-side secret)
+*firebase-adminsdk*.json

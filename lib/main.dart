@@ -13,11 +13,13 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mockmate/core/di/injection_container.dart';
 import 'package:mockmate/core/router/app_router.dart';
+import 'package:mockmate/core/services/notification_service.dart';
 import 'package:mockmate/core/theme/app_theme.dart';
 
 void main() async {
@@ -34,6 +36,14 @@ void main() async {
   // WHY .env? So we never hardcode sensitive keys (API keys, URLs) in code.
   await dotenv.load(fileName: '.env');
 
+  // Initialize Firebase (required for FCM push notifications).
+  await Firebase.initializeApp();
+
+  // Initialize push notifications (Firebase + OneSignal).
+  await NotificationService.instance.initialize(
+    oneSignalAppId: dotenv.env['ONESIGNAL_APP_ID'] ?? '',
+  );
+
   // Set up all dependencies in GetIt.
   await setupDependencies();
 
@@ -44,8 +54,10 @@ void main() async {
   // Set system UI overlay style (status bar color).
   SystemChrome.setSystemUIOverlayStyle(
     isDark
-        ? SystemUiOverlayStyle.light.copyWith(statusBarColor: Colors.transparent)
-        : SystemUiOverlayStyle.dark.copyWith(statusBarColor: Colors.transparent),
+        ? SystemUiOverlayStyle.light
+            .copyWith(statusBarColor: Colors.transparent)
+        : SystemUiOverlayStyle.dark
+            .copyWith(statusBarColor: Colors.transparent),
   );
 
   runApp(MockMateApp(isDarkMode: isDark));

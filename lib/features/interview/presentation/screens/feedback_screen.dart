@@ -1,20 +1,26 @@
-/// Feedback/Results Screen — shown after completing all interview questions.
+/// Feedback/Results Screen — Premium Results Experience
 ///
-/// UX Fixes:
-/// - Animated score count-up (0 → final score)
-/// - Animated circular progress arc around score
-/// - Role & question count shown for context (not lost after session)
-/// - Confetti-style emoji rain for high scores
+/// Features:
+/// - Animated score count-up with design tokens
+/// - Animated circular progress arc
+/// - Premium card styling with AppCard
+/// - Content guidelines integration
+/// - AppButton components
+/// - Design token spacing and typography
+/// - Confetti-style feedback for high scores
 library;
 
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:go_router/go_router.dart';
 import 'package:gap/gap.dart';
+import 'package:go_router/go_router.dart';
+import 'package:mockmate/core/constants/copy_guidelines.dart';
 import 'package:mockmate/core/router/app_router.dart';
+import 'package:mockmate/core/theme/design_tokens.dart';
 import 'package:mockmate/core/widgets/app_button.dart';
+import 'package:mockmate/core/widgets/app_card.dart';
 
 class FeedbackScreen extends StatefulWidget {
   final String sessionId;
@@ -91,13 +97,15 @@ class _FeedbackScreenState extends State<FeedbackScreen>
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final color = _scoreColor();
 
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+          padding: EdgeInsets.symmetric(
+            horizontal: AppSpacing.x3l.toDouble(),
+            vertical: AppSpacing.x4l.toDouble(),
+          ),
           child: Column(
             children: [
               // ── Animated Score Arc ──────────────────────────────────
@@ -117,7 +125,7 @@ class _FeedbackScreenState extends State<FeedbackScreen>
                             progress: _scoreProgress.value,
                             targetScore: widget.score,
                             color: color,
-                            backgroundColor: color.withValues(alpha: 0.12),
+                            backgroundColor: color.withOpacity(0.12),
                           ),
                         ),
                         // Animated score number
@@ -126,7 +134,7 @@ class _FeedbackScreenState extends State<FeedbackScreen>
                           children: [
                             Text(
                               '${_scoreCount.value}',
-                              style: theme.textTheme.displayLarge?.copyWith(
+                              style: AppTypography.displayXXL.copyWith(
                                 color: color,
                                 fontWeight: FontWeight.w800,
                                 fontSize: 52,
@@ -134,8 +142,8 @@ class _FeedbackScreenState extends State<FeedbackScreen>
                             ),
                             Text(
                               '/100',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: color.withValues(alpha: 0.7),
+                              style: AppTypography.bodyM.copyWith(
+                                color: color.withOpacity(0.7),
                               ),
                             ),
                           ],
@@ -146,70 +154,62 @@ class _FeedbackScreenState extends State<FeedbackScreen>
                 },
               ),
 
-              const Gap(24),
+              Gap(AppSpacing.x3l.toDouble()),
 
               FadeTransition(
                 opacity: _contentFade,
                 child: Text(
                   _scoreLabel(),
-                  style: theme.textTheme.displayMedium,
+                  style: AppTypography.headlineXL.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
                   textAlign: TextAlign.center,
                 ),
               ),
 
-              const Gap(12),
+              Gap(AppSpacing.m.toDouble()),
 
               FadeTransition(
                 opacity: _contentFade,
                 child: Text(
                   widget.feedback,
-                  style: theme.textTheme.bodyLarge,
+                  style: AppTypography.bodyL.copyWith(
+                    color: AppColors.neutral300,
+                  ),
                   textAlign: TextAlign.center,
                 ),
               ),
 
-              const Gap(40),
+              Gap(AppSpacing.x5l.toDouble()),
 
               // ── Performance Stats ─────────────────────────────────
               FadeTransition(
                 opacity: _contentFade,
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surface,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: theme.colorScheme.outline.withValues(alpha: 0.2),
-                    ),
-                  ),
+                child: AppSectionCard(
+                  title: 'Session Summary',
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Session Summary',
-                          style: theme.textTheme.titleMedium),
-                      const Gap(16),
                       _StatRow(
                         icon: Icons.star_rounded,
                         label: 'Final Score',
                         value: '${widget.score} / 100',
                         color: color,
                       ),
-                      const Gap(12),
+                      Gap(AppSpacing.m.toDouble()),
                       _StatRow(
                         icon: Icons.check_circle_rounded,
                         label: 'Status',
                         value: 'Completed ✓',
                         color: const Color(0xFF22C55E),
                       ),
-                      const Gap(12),
+                      Gap(AppSpacing.m.toDouble()),
                       _StatRow(
                         icon: Icons.psychology_rounded,
                         label: 'AI Evaluations',
                         value: 'Answer-by-answer',
-                        color: theme.colorScheme.primary,
+                        color: AppColors.primary500,
                       ),
-                      const Gap(12),
+                      Gap(AppSpacing.m.toDouble()),
                       _StatRow(
                         icon: Icons.bar_chart_rounded,
                         label: 'Performance',
@@ -225,27 +225,33 @@ class _FeedbackScreenState extends State<FeedbackScreen>
                 ),
               ),
 
-              const Gap(32),
+              Gap(AppSpacing.x4l.toDouble()),
 
               FadeTransition(
                 opacity: _contentFade,
                 child: Column(
                   children: [
-                    AppPrimaryButton(
-                      label: 'Practice Again',
+                    AppButton(
+                      label: CTALibrary.practiceAgain,
                       icon: Icons.refresh_rounded,
                       onPressed: () {
                         HapticFeedback.lightImpact();
                         context.go(AppRoutes.roleSelection);
                       },
+                      variant: ButtonVariant.primary,
+                      size: ButtonSize.large,
+                      isFullWidth: true,
                     ),
-                    const Gap(12),
-                    AppOutlinedButton(
+                    Gap(AppSpacing.m.toDouble()),
+                    AppButton(
                       label: 'Go to Dashboard',
                       onPressed: () {
                         HapticFeedback.lightImpact();
                         context.go(AppRoutes.dashboard);
                       },
+                      variant: ButtonVariant.outlined,
+                      size: ButtonSize.large,
+                      isFullWidth: true,
                     ),
                   ],
                 ),
@@ -331,17 +337,23 @@ class _StatRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Row(
       children: [
         Icon(icon, size: 20, color: color),
-        const Gap(12),
-        Text(label, style: theme.textTheme.bodyMedium),
+        Gap(AppSpacing.m.toDouble()),
+        Text(
+          label,
+          style: AppTypography.bodyM.copyWith(
+            color: AppColors.neutral300,
+          ),
+        ),
         const Spacer(),
         Text(
           value,
-          style: theme.textTheme.bodyMedium
-              ?.copyWith(fontWeight: FontWeight.w600),
+          style: AppTypography.bodyM.copyWith(
+            fontWeight: FontWeight.w600,
+            color: AppColors.neutral100,
+          ),
         ),
       ],
     );

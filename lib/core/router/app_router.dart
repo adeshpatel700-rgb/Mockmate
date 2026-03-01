@@ -34,6 +34,24 @@ import 'package:mockmate/features/interview/presentation/screens/feedback_screen
 import 'package:mockmate/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:mockmate/features/dashboard/presentation/screens/history_screen.dart';
 
+// Settings screen
+import 'package:mockmate/features/settings/presentation/screens/settings_screen.dart';
+
+// Profile screen
+import 'package:mockmate/features/profile/presentation/screens/profile_screen.dart';
+
+// Analytics screen
+import 'package:mockmate/features/analytics/presentation/screens/analytics_screen.dart';
+
+// Interview Prep screen
+import 'package:mockmate/features/prep/presentation/screens/interview_prep_screen.dart';
+
+// Leaderboard screen
+import 'package:mockmate/features/leaderboard/presentation/screens/leaderboard_screen.dart';
+
+// Help screen
+import 'package:mockmate/features/help/presentation/screens/help_screen.dart';
+
 // Named route constants — use these instead of string literals.
 class AppRoutes {
   AppRoutes._();
@@ -47,7 +65,18 @@ class AppRoutes {
   static const String interview = '/interview/session';
   static const String feedback = '/interview/feedback';
   static const String history = '/dashboard/history';
+  static const String settings = '/settings';
+  static const String profile = '/profile';
+  static const String analytics = '/analytics';
+  static const String interviewPrep = '/interview-prep';
+  static const String leaderboard = '/leaderboard';
+  static const String help = '/help';
 }
+
+/// ── DEV FLAG: Bypass auth for UI/UX testing ──────────────────────────────
+/// Set to `false` before shipping to production.
+/// When true, skips login and goes directly to dashboard.
+const bool kDevBypassAuth = true;
 
 /// Builds and returns the configured [GoRouter] instance.
 GoRouter buildRouter(FlutterSecureStorage secureStorage) {
@@ -57,6 +86,19 @@ GoRouter buildRouter(FlutterSecureStorage secureStorage) {
 
     // ── Auth Guard ─────────────────────────────────────────────────────────
     redirect: (BuildContext context, GoRouterState state) async {
+      // DEV MODE: Skip auth check, always go to dashboard from any auth route
+      if (kDevBypassAuth) {
+        final authRoutes = [
+          AppRoutes.onboarding,
+          AppRoutes.login,
+          AppRoutes.register,
+        ];
+        if (authRoutes.contains(state.matchedLocation)) {
+          return AppRoutes.dashboard;
+        }
+        return null;
+      }
+
       final token = await secureStorage.read(key: AppConstants.accessTokenKey);
       final isLoggedIn = token != null;
 
@@ -143,6 +185,36 @@ GoRouter buildRouter(FlutterSecureStorage secureStorage) {
         path: AppRoutes.history,
         name: 'history',
         builder: (context, state) => const HistoryScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.settings,
+        name: 'settings',
+        builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.profile,
+        name: 'profile',
+        builder: (context, state) => const ProfileScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.analytics,
+        name: 'analytics',
+        builder: (context, state) => const AnalyticsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.interviewPrep,
+        name: 'interviewPrep',
+        builder: (context, state) => const InterviewPrepScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.leaderboard,
+        name: 'leaderboard',
+        builder: (context, state) => const LeaderboardScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.help,
+        name: 'help',
+        builder: (context, state) => const HelpScreen(),
       ),
     ],
 

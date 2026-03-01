@@ -1,11 +1,14 @@
-/// Interview Screen — the main interview session UI.
+/// Interview Screen — Premium Interview Session Experience
 ///
-/// UX Fixes applied:
-/// - AppBar shows role + question count for context (not just "1 of 5")
-/// - Progress bar is taller, rounded, animated between questions
-/// - "AI evaluating" state replaced with a pulsing shimmer row
-/// - Answer field shows character count
-/// - Haptic feedback on submit
+/// Features:
+/// - Design token integration throughout
+/// - Premium card styling with AppCard
+/// - AppTextField for answer input
+/// - Content guidelines integration
+/// - Stepped progress bar with design tokens
+/// - Premium feedback cards
+/// - AppBadge for difficulty display
+/// - Haptic feedback on interactions
 library;
 
 import 'dart:math' as math;
@@ -13,12 +16,16 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:gap/gap.dart';
+import 'package:go_router/go_router.dart';
+import 'package:mockmate/core/constants/copy_guidelines.dart';
 import 'package:mockmate/core/di/injection_container.dart';
 import 'package:mockmate/core/router/app_router.dart';
+import 'package:mockmate/core/theme/design_tokens.dart';
+import 'package:mockmate/core/widgets/app_badge.dart';
 import 'package:mockmate/core/widgets/app_button.dart';
 import 'package:mockmate/core/widgets/app_loader.dart';
+import 'package:mockmate/core/widgets/app_toast.dart';
 import 'package:mockmate/features/interview/presentation/bloc/interview_bloc.dart';
 
 class InterviewScreen extends StatelessWidget {
@@ -93,12 +100,9 @@ class _InterviewViewState extends State<_InterviewView>
     return BlocConsumer<InterviewBloc, InterviewState>(
       listener: (context, state) {
         if (state is InterviewError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: Theme.of(context).colorScheme.error,
-              behavior: SnackBarBehavior.floating,
-            ),
+          AppToast.error(
+            context,
+            message: state.message,
           );
         }
         if (state is FeedbackReceived) {
@@ -146,8 +150,6 @@ class _InterviewViewState extends State<_InterviewView>
   }
 
   Widget _buildInterviewUI(BuildContext context, InterviewState state) {
-    final theme = Theme.of(context);
-
     late final int currentIndex;
     late final int totalQuestions;
     late final String question;
@@ -191,26 +193,28 @@ class _InterviewViewState extends State<_InterviewView>
           children: [
             Text(
               role,
-              style: theme.textTheme.titleMedium,
+              style: AppTypography.titleM.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
             Text(
               'Question ${currentIndex + 1} of $totalQuestions',
-              style: theme.textTheme.bodySmall,
+              style: AppTypography.labelM.copyWith(
+                color: AppColors.neutral400,
+              ),
             ),
           ],
         ),
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: Chip(
-              label: Text(
-                state is InterviewInProgress ? state.session.difficulty : '',
-                style: theme.textTheme.bodySmall,
-              ),
-              padding: EdgeInsets.zero,
-              visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.only(right: AppSpacing.l.toDouble()),
+            child: AppBadge(
+              label:
+                  state is InterviewInProgress ? state.session.difficulty : '',
+              variant: BadgeVariant.info,
+              size: BadgeSize.large,
             ),
           ),
         ],
@@ -220,25 +224,29 @@ class _InterviewViewState extends State<_InterviewView>
           children: [
             // ── Animated Stepped Progress Bar ─────────────────────────
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+              padding: EdgeInsets.fromLTRB(
+                AppSpacing.xl.toDouble(),
+                AppSpacing.xs.toDouble(),
+                AppSpacing.xl.toDouble(),
+                0,
+              ),
               child: Row(
                 children: List.generate(totalQuestions, (i) {
                   final filled = i < currentIndex + 1;
                   final isActive = i == currentIndex;
                   return Expanded(
                     child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 350),
-                      curve: Curves.easeOut,
+                      duration: AppDurations.normal,
+                      curve: AppCurves.easeOutCubic,
                       height: 4,
-                      margin: const EdgeInsets.only(right: 4),
+                      margin: EdgeInsets.only(right: AppSpacing.xs.toDouble()),
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: BorderRadius.circular(AppRadius.xs),
                         color: filled
                             ? (isActive
-                                ? theme.colorScheme.primary
-                                : theme.colorScheme.primary
-                                    .withValues(alpha: 0.5))
-                            : theme.colorScheme.surface,
+                                ? AppColors.primary500
+                                : AppColors.primary500.withOpacity(0.5))
+                            : AppColors.darkSurface,
                       ),
                     ),
                   );
@@ -248,13 +256,13 @@ class _InterviewViewState extends State<_InterviewView>
 
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
+                padding: EdgeInsets.all(AppSpacing.x3l.toDouble()),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // ── Question Card ────────────────────────────────────
                     AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 300),
+                      duration: AppDurations.normal,
                       transitionBuilder: (child, anim) => FadeTransition(
                         opacity: anim,
                         child: SlideTransition(
@@ -268,13 +276,13 @@ class _InterviewViewState extends State<_InterviewView>
                       child: Container(
                         key: ValueKey(currentIndex),
                         width: double.infinity,
-                        padding: const EdgeInsets.all(20),
+                        padding: EdgeInsets.all(AppSpacing.xl.toDouble()),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.surface,
-                          borderRadius: BorderRadius.circular(16),
+                          color: AppColors.darkSurface,
+                          borderRadius: BorderRadius.circular(AppRadius.l),
                           border: Border.all(
-                            color: theme.colorScheme.primary
-                                .withValues(alpha: 0.2),
+                            color: AppColors.primary500.withOpacity(0.3),
+                            width: 1.5,
                           ),
                         ),
                         child: Column(
@@ -283,41 +291,45 @@ class _InterviewViewState extends State<_InterviewView>
                             Row(
                               children: [
                                 Container(
-                                  padding: const EdgeInsets.all(6),
+                                  padding:
+                                      EdgeInsets.all(AppSpacing.xs.toDouble()),
                                   decoration: BoxDecoration(
-                                    color: theme.colorScheme.primary
-                                        .withValues(alpha: 0.15),
-                                    borderRadius: BorderRadius.circular(8),
+                                    color:
+                                        AppColors.primary500.withOpacity(0.12),
+                                    borderRadius:
+                                        BorderRadius.circular(AppRadius.s),
                                   ),
                                   child: Icon(
                                     Icons.psychology_rounded,
                                     size: 18,
-                                    color: theme.colorScheme.primary,
+                                    color: AppColors.primary400,
                                   ),
                                 ),
-                                const Gap(10),
+                                Gap(AppSpacing.xs.toDouble()),
                                 Text(
                                   'Question ${currentIndex + 1}',
-                                  style: theme.textTheme.labelLarge?.copyWith(
-                                    color: theme.colorScheme.primary,
+                                  style: AppTypography.labelM.copyWith(
+                                    color: AppColors.primary400,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
                                 const Spacer(),
                                 Text(
                                   '${(progress * 100).toInt()}%',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.primary,
-                                    fontWeight: FontWeight.w600,
+                                  style: AppTypography.labelM.copyWith(
+                                    color: AppColors.primary400,
+                                    fontWeight: FontWeight.w700,
                                   ),
                                 ),
                               ],
                             ),
-                            const Gap(14),
+                            Gap(AppSpacing.m.toDouble()),
                             Text(
                               question,
-                              style: theme.textTheme.bodyLarge?.copyWith(
+                              style: AppTypography.bodyL.copyWith(
                                 fontWeight: FontWeight.w500,
                                 height: 1.6,
+                                color: AppColors.neutral100,
                               ),
                             ),
                           ],
@@ -325,15 +337,19 @@ class _InterviewViewState extends State<_InterviewView>
                       ),
                     ),
 
-                    const Gap(24),
+                    Gap(AppSpacing.x3l.toDouble()),
 
                     // ── Answer Field ────────────────────────────────────
                     if (!hasFeedback) ...[
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('Your Answer',
-                              style: theme.textTheme.titleMedium),
+                          Text(
+                            'Your Answer',
+                            style: AppTypography.titleM.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                           AnimatedBuilder(
                             animation: _answerController,
                             builder: (_, __) {
@@ -351,19 +367,21 @@ class _InterviewViewState extends State<_InterviewView>
                                 children: [
                                   if (!isValid && charCount > 0)
                                     Padding(
-                                      padding: const EdgeInsets.only(right: 8),
+                                      padding: EdgeInsets.only(
+                                        right: AppSpacing.s.toDouble(),
+                                      ),
                                       child: Icon(
                                         Icons.info_outline,
                                         size: 16,
-                                        color: theme.colorScheme.error,
+                                        color: AppColors.error500,
                                       ),
                                     ),
                                   Text(
                                     '$wordCount words · $charCount chars',
-                                    style: theme.textTheme.bodySmall?.copyWith(
+                                    style: AppTypography.labelM.copyWith(
                                       color: isValid || charCount == 0
-                                          ? theme.colorScheme.primary
-                                          : theme.colorScheme.error,
+                                          ? AppColors.primary400
+                                          : AppColors.error500,
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
@@ -373,12 +391,12 @@ class _InterviewViewState extends State<_InterviewView>
                           ),
                         ],
                       ),
-                      const Gap(10),
+                      Gap(AppSpacing.xs.toDouble()),
                       Container(
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(AppRadius.l),
                           border: Border.all(
-                            color: theme.colorScheme.primary.withOpacity(0.15),
+                            color: AppColors.primary500.withOpacity(0.2),
                             width: 1.5,
                           ),
                         ),
@@ -391,22 +409,25 @@ class _InterviewViewState extends State<_InterviewView>
                           decoration: InputDecoration(
                             hintText:
                                 'Type your answer here...\n\n💡 Tips:\n• Be specific and detailed\n• Use real examples\n• Explain your reasoning\n• Mention relevant technologies',
-                            hintStyle: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.hintColor.withOpacity(0.7),
+                            hintStyle: AppTypography.bodyM.copyWith(
+                              color: AppColors.neutral500,
                               height: 1.6,
                             ),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
+                              borderRadius: BorderRadius.circular(AppRadius.l),
                               borderSide: BorderSide.none,
                             ),
                             filled: true,
-                            fillColor: theme.colorScheme.surface,
-                            contentPadding: const EdgeInsets.all(20),
+                            fillColor: AppColors.darkSurface,
+                            contentPadding:
+                                EdgeInsets.all(AppSpacing.xl.toDouble()),
                           ),
-                          style: theme.textTheme.bodyLarge,
+                          style: AppTypography.bodyL.copyWith(
+                            color: AppColors.neutral100,
+                          ),
                         ),
                       ),
-                      const Gap(20),
+                      Gap(AppSpacing.xl.toDouble()),
                       if (isSubmitting)
                         // Pulsing AI evaluation indicator with timeout warning
                         _AiEvaluatingRow(
@@ -414,7 +435,7 @@ class _InterviewViewState extends State<_InterviewView>
                           submissionTime: _submissionTime,
                         )
                       else
-                        AppPrimaryButton(
+                        AppButton(
                           label: 'Submit Answer',
                           onPressed: _answerController.text.trim().length >= 20
                               ? () {
@@ -425,23 +446,29 @@ class _InterviewViewState extends State<_InterviewView>
                                       );
                                 }
                               : null, // Disabled if answer too short
+                          variant: ButtonVariant.primary,
+                          size: ButtonSize.large,
+                          isFullWidth: true,
                         ),
                       if (_answerController.text.trim().isNotEmpty &&
                           _answerController.text.trim().length < 20)
                         Padding(
-                          padding: const EdgeInsets.only(top: 12),
+                          padding:
+                              EdgeInsets.only(top: AppSpacing.m.toDouble()),
                           child: Row(
                             children: [
                               Icon(
                                 Icons.info_outline,
                                 size: 16,
-                                color: theme.colorScheme.error,
+                                color: AppColors.error500,
                               ),
-                              const Gap(8),
-                              Text(
-                                'Please provide at least 20 characters for a meaningful answer',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.error,
+                              Gap(AppSpacing.s.toDouble()),
+                              Expanded(
+                                child: Text(
+                                  ErrorMessages.answerTooShort,
+                                  style: AppTypography.labelM.copyWith(
+                                    color: AppColors.error500,
+                                  ),
                                 ),
                               ),
                             ],
@@ -452,10 +479,10 @@ class _InterviewViewState extends State<_InterviewView>
                     // ── Feedback Card ───────────────────────────────────
                     if (hasFeedback && state is FeedbackReceived) ...[
                       _FeedbackCard(feedback: state.feedback),
-                      const Gap(20),
-                      AppPrimaryButton(
+                      Gap(AppSpacing.xl.toDouble()),
+                      AppButton(
                         label: state.isLastQuestion
-                            ? 'View Results'
+                            ? CTALibrary.viewResults
                             : 'Next Question →',
                         icon: state.isLastQuestion
                             ? Icons.emoji_events_rounded
@@ -464,6 +491,9 @@ class _InterviewViewState extends State<_InterviewView>
                           HapticFeedback.lightImpact();
                           context.read<InterviewBloc>().add(NextQuestion());
                         },
+                        variant: ButtonVariant.primary,
+                        size: ButtonSize.large,
+                        isFullWidth: true,
                       ),
                     ],
                   ],
@@ -511,7 +541,6 @@ class _AiEvaluatingRowState extends State<_AiEvaluatingRow> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Column(
       children: [
         AnimatedBuilder(
@@ -519,12 +548,12 @@ class _AiEvaluatingRowState extends State<_AiEvaluatingRow> {
           builder: (context, _) {
             final opacity = 0.5 + (widget.pulse.value * 0.5);
             return Container(
-              padding: const EdgeInsets.all(18),
+              padding: EdgeInsets.all(AppSpacing.l.toDouble() + 2),
               decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(16),
+                color: AppColors.primary500.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(AppRadius.l),
                 border: Border.all(
-                  color: theme.colorScheme.primary.withOpacity(opacity * 0.5),
+                  color: AppColors.primary500.withOpacity(opacity * 0.5),
                   width: 1.5,
                 ),
               ),
@@ -536,28 +565,27 @@ class _AiEvaluatingRowState extends State<_AiEvaluatingRow> {
                     child: CircularProgressIndicator(
                       strokeWidth: 3,
                       valueColor: AlwaysStoppedAnimation(
-                        theme.colorScheme.primary.withOpacity(opacity),
+                        AppColors.primary500.withOpacity(opacity),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  SizedBox(width: AppSpacing.l.toDouble()),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           'AI is evaluating your answer…',
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            color:
-                                theme.colorScheme.primary.withOpacity(opacity),
+                          style: AppTypography.bodyL.copyWith(
+                            color: AppColors.primary500.withOpacity(opacity),
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        SizedBox(height: AppSpacing.xs.toDouble()),
                         Text(
                           'Analyzing your response intelligently',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.primary.withOpacity(0.6),
+                          style: AppTypography.labelM.copyWith(
+                            color: AppColors.primary500.withOpacity(0.6),
                           ),
                         ),
                       ],
@@ -568,12 +596,14 @@ class _AiEvaluatingRowState extends State<_AiEvaluatingRow> {
                     children: List.generate(3, (i) {
                       final phase = (widget.pulse.value + i / 3) % 1.0;
                       return Container(
-                        margin: const EdgeInsets.only(left: 5),
+                        margin: EdgeInsets.only(
+                          left: AppSpacing.xs.toDouble() + 1,
+                        ),
                         width: 8,
                         height: 8,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: theme.colorScheme.primary.withOpacity(
+                          color: AppColors.primary500.withOpacity(
                             (0.3 + math.sin(phase * math.pi) * 0.7)
                                 .clamp(0.0, 1.0),
                           ),
@@ -587,14 +617,14 @@ class _AiEvaluatingRowState extends State<_AiEvaluatingRow> {
           },
         ),
         if (_showTimeoutWarning) ...[
-          const SizedBox(height: 12),
+          SizedBox(height: AppSpacing.m.toDouble()),
           Container(
-            padding: const EdgeInsets.all(14),
+            padding: EdgeInsets.all(AppSpacing.m.toDouble()),
             decoration: BoxDecoration(
-              color: theme.colorScheme.error.withOpacity(0.08),
-              borderRadius: BorderRadius.circular(12),
+              color: AppColors.error500.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(AppRadius.m),
               border: Border.all(
-                color: theme.colorScheme.error.withOpacity(0.3),
+                color: AppColors.error500.withOpacity(0.3),
               ),
             ),
             child: Row(
@@ -602,14 +632,14 @@ class _AiEvaluatingRowState extends State<_AiEvaluatingRow> {
                 Icon(
                   Icons.schedule_rounded,
                   size: 20,
-                  color: theme.colorScheme.error,
+                  color: AppColors.error500,
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: AppSpacing.m.toDouble()),
                 Expanded(
                   child: Text(
                     'This is taking longer than usual. Please wait…',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.error,
+                    style: AppTypography.labelM.copyWith(
+                      color: AppColors.error500,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -632,7 +662,6 @@ class _FeedbackCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final score = feedback.score as int;
     final scoreColor = score >= 80
         ? const Color(0xFF22C55E)
@@ -646,35 +675,45 @@ class _FeedbackCard extends StatelessWidget {
         // Score Badge
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(20),
+          padding: EdgeInsets.all(AppSpacing.xl.toDouble()),
           decoration: BoxDecoration(
-            color: scoreColor.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: scoreColor.withValues(alpha: 0.3)),
+            color: scoreColor.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(AppRadius.l),
+            border: Border.all(
+              color: scoreColor.withOpacity(0.3),
+              width: 1.5,
+            ),
           ),
           child: Row(
             children: [
               Text(
                 '$score',
-                style: theme.textTheme.displayLarge?.copyWith(
+                style: AppTypography.displayL.copyWith(
                   color: scoreColor,
                   fontWeight: FontWeight.w800,
                 ),
               ),
-              const Gap(4),
+              Gap(AppSpacing.xs.toDouble()),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('/100', style: theme.textTheme.bodyMedium),
-                  const Gap(2),
+                  Text(
+                    '/100',
+                    style: AppTypography.bodyM.copyWith(
+                      color: AppColors.neutral300,
+                    ),
+                  ),
+                  Gap(AppSpacing.xs.toDouble()),
                   Text(
                     score >= 80
                         ? 'Excellent! 🎉'
                         : score >= 60
                             ? 'Good answer 👍'
                             : 'Keep practicing 💪',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                        color: scoreColor, fontWeight: FontWeight.w600),
+                    style: AppTypography.bodyM.copyWith(
+                      color: scoreColor,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ],
               ),
@@ -682,27 +721,45 @@ class _FeedbackCard extends StatelessWidget {
           ),
         ),
 
-        const Gap(16),
+        Gap(AppSpacing.l.toDouble()),
 
-        Text(feedback.overallFeedback as String,
-            style: theme.textTheme.bodyLarge),
+        Text(
+          feedback.overallFeedback as String,
+          style: AppTypography.bodyL.copyWith(
+            color: AppColors.neutral100,
+            height: 1.6,
+          ),
+        ),
 
         if ((feedback.strengths as List).isNotEmpty) ...[
-          const Gap(16),
-          Text('✅ Strengths', style: theme.textTheme.titleMedium),
-          const Gap(8),
+          Gap(AppSpacing.l.toDouble()),
+          Text(
+            '✅ Strengths',
+            style: AppTypography.titleM.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          Gap(AppSpacing.s.toDouble()),
           ...(feedback.strengths as List).map(
             (s) => Padding(
-              padding: const EdgeInsets.only(bottom: 6),
+              padding: EdgeInsets.only(bottom: AppSpacing.xs.toDouble()),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.check_circle_outline,
-                      size: 16, color: Color(0xFF22C55E)),
-                  const Gap(8),
+                  const Icon(
+                    Icons.check_circle_outline,
+                    size: 16,
+                    color: Color(0xFF22C55E),
+                  ),
+                  Gap(AppSpacing.s.toDouble()),
                   Expanded(
-                      child: Text(s.toString(),
-                          style: theme.textTheme.bodyMedium)),
+                    child: Text(
+                      s.toString(),
+                      style: AppTypography.bodyM.copyWith(
+                        color: AppColors.neutral200,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -710,21 +767,34 @@ class _FeedbackCard extends StatelessWidget {
         ],
 
         if ((feedback.improvements as List).isNotEmpty) ...[
-          const Gap(16),
-          Text('📈 Areas to Improve', style: theme.textTheme.titleMedium),
-          const Gap(8),
+          Gap(AppSpacing.l.toDouble()),
+          Text(
+            '📈 Areas to Improve',
+            style: AppTypography.titleM.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          Gap(AppSpacing.s.toDouble()),
           ...(feedback.improvements as List).map(
             (i) => Padding(
-              padding: const EdgeInsets.only(bottom: 6),
+              padding: EdgeInsets.only(bottom: AppSpacing.xs.toDouble()),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.trending_up_rounded,
-                      size: 16, color: Color(0xFFF59E0B)),
-                  const Gap(8),
+                  const Icon(
+                    Icons.trending_up_rounded,
+                    size: 16,
+                    color: Color(0xFFF59E0B),
+                  ),
+                  Gap(AppSpacing.s.toDouble()),
                   Expanded(
-                      child: Text(i.toString(),
-                          style: theme.textTheme.bodyMedium)),
+                    child: Text(
+                      i.toString(),
+                      style: AppTypography.bodyM.copyWith(
+                        color: AppColors.neutral200,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),

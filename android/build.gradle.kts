@@ -1,3 +1,14 @@
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath("com.google.gms:google-services:4.4.1")
+        // NOTE: OneSignal Gradle plugin removed — onesignal_flutter v5+ does not require it
+    }
+}
+
 allprojects {
     repositories {
         google()

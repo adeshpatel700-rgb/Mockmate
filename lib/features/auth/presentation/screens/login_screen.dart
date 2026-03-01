@@ -1,5 +1,33 @@
-/// Login Screen — BlocConsumer pattern for reactive UI.
-library;
+/// ═══════════════════════════════════════════════════════════════════════════════
+/// 🔐 LOGIN SCREEN - Premium Authentication Experience
+/// ═══════════════════════════════════════════════════════════════════════════════
+///
+/// Clean, professional login screen with form validation and loading states.
+/// Uses BlocConsumer pattern for reactive UI and state management.
+///
+/// FEATURES:
+/// - Email and password validation with error messages
+/// - Loading state with disabled input during auth
+/// - Forgot password link (placeholder)
+/// - Sign up link for new users
+/// - Keyboard-aware scroll behavior
+/// - Premium toast notifications
+///
+/// UX PRINCIPLES:
+/// - Clear back button to onboarding
+/// - Friendly headline copy
+/// - Immediate validation feedback
+/// - Loading state on button during auth
+/// - Error toasts with retry option
+///
+/// WHY THIS APPROACH?
+/// - Uses new AppTextField and AppButton components
+/// - AppToast for error notifications
+/// - Design tokens for spacing/typography
+/// - Content from copy_guidelines.dart
+/// - Consistent with premium design system
+///
+/// ═══════════════════════════════════════════════════════════════════════════════
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -7,9 +35,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mockmate/core/di/injection_container.dart';
 import 'package:mockmate/core/router/app_router.dart';
+import 'package:mockmate/core/theme/design_tokens.dart';
+import 'package:mockmate/core/constants/copy_guidelines.dart';
 import 'package:mockmate/core/widgets/app_button.dart';
-import 'package:mockmate/core/widgets/app_loader.dart';
 import 'package:mockmate/core/widgets/app_text_field.dart';
+import 'package:mockmate/core/widgets/app_toast.dart';
 import 'package:mockmate/features/auth/presentation/bloc/auth_bloc.dart';
 
 class LoginScreen extends StatelessWidget {
@@ -48,130 +78,146 @@ class _LoginViewState extends State<_LoginView> {
     if (_formKey.currentState?.validate() ?? false) {
       HapticFeedback.lightImpact();
       context.read<AuthBloc>().add(
-        LoginRequested(
-          email: _emailController.text.trim(),
-          password: _passwordController.text,
-        ),
-      );
+            LoginRequested(
+              email: _emailController.text.trim(),
+              password: _passwordController.text,
+            ),
+          );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return BlocConsumer<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is Authenticated) {
           context.go(AppRoutes.dashboard);
         } else if (state is AuthError) {
-          AppSnackBar.showError(context, state.message);
+          AppToast.error(
+            context,
+            message: state.message,
+          );
         }
       },
       builder: (context, state) {
+        final isLoading = state is AuthLoading;
+
         return Scaffold(
           body: SafeArea(
             child: SingleChildScrollView(
-              // Keeps content visible above keyboard
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 48),
+              padding: EdgeInsets.symmetric(
+                horizontal: AppSpacing.x3l.toDouble(),
+                vertical: AppSpacing.x5l.toDouble(),
+              ),
               child: Form(
                 key: _formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // ── Back Button (pop, not go) ─────────────────────────
+                    // Back button
                     IconButton(
                       onPressed: () => context.canPop()
                           ? context.pop()
                           : context.go(AppRoutes.onboarding),
                       icon: const Icon(Icons.arrow_back_rounded),
                       style: IconButton.styleFrom(
-                        backgroundColor: theme.colorScheme.surface,
+                        backgroundColor: AppColors.darkSurface,
+                        padding: EdgeInsets.all(AppSpacing.m.toDouble()),
                       ),
                     ),
 
-                    const SizedBox(height: 40),
+                    SizedBox(height: AppSpacing.x4l.toDouble()),
 
-                    // ── Header ────────────────────────────────────────────
+                    // Headline
                     Text(
-                      'Welcome\nback 👋',
-                      style: theme.textTheme.displayMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Log in to continue your interview practice.',
-                      style: theme.textTheme.bodyMedium,
+                      HeadlineLibrary.loginHeadline,
+                      style: AppTypography.displayL.copyWith(
+                        height: 1.1,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
 
-                    const SizedBox(height: 48),
+                    SizedBox(height: AppSpacing.s.toDouble()),
 
-                    // ── Form Fields ───────────────────────────────────────
-                    AppTextField(
-                      label: 'Email',
-                      hint: 'you@example.com',
+                    Text(
+                      HeadlineLibrary.loginSubheadline,
+                      style: AppTypography.bodyL.copyWith(
+                        color: AppColors.neutral400,
+                      ),
+                    ),
+
+                    SizedBox(height: AppSpacing.x5l.toDouble()),
+
+                    // Email field
+                    AppEmailField(
                       controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      prefixIcon: Icons.email_outlined,
-                      textInputAction: TextInputAction.next,
-                      validator: (v) {
-                        if (v == null || v.isEmpty) return 'Email is required';
-                        if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(v)) {
-                          return 'Enter a valid email';
-                        }
-                        return null;
+                      onSubmitted: (_) {
+                        // Move focus to password field
+                        FocusScope.of(context).nextFocus();
                       },
                     ),
 
-                    const SizedBox(height: 16),
+                    SizedBox(height: AppSpacing.l.toDouble()),
 
-                    AppTextField(
-                      label: 'Password',
+                    // Password field
+                    AppPasswordField(
                       controller: _passwordController,
-                      isPassword: true,
-                      prefixIcon: Icons.lock_outline_rounded,
-                      textInputAction: TextInputAction.done,
                       onSubmitted: (_) => _onLoginPressed(context),
-                      validator: (v) {
-                        if (v == null || v.isEmpty) return 'Password is required';
-                        if (v.length < 8) return 'At least 8 characters required';
-                        return null;
-                      },
                     ),
 
-                    const SizedBox(height: 4),
+                    SizedBox(height: AppSpacing.xs.toDouble()),
 
-                    // Forgot password
+                    // Forgot password link
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          // TODO: Implement forgot password flow
+                          AppToast.info(
+                            context,
+                            message: 'Forgot password feature coming soon!',
+                          );
+                        },
                         style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 4, vertical: 8),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: AppSpacing.xs.toDouble(),
+                            vertical: AppSpacing.s.toDouble(),
+                          ),
                         ),
-                        child: const Text('Forgot Password?'),
+                        child: Text(
+                          'Forgot Password?',
+                          style: AppTypography.labelM.copyWith(
+                            color: AppColors.primary500,
+                          ),
+                        ),
                       ),
                     ),
 
-                    const SizedBox(height: 24),
+                    SizedBox(height: AppSpacing.xxl.toDouble()),
 
-                    // ── Login Button ──────────────────────────────────────
-                    AppPrimaryButton(
-                      label: 'Log In',
-                      isLoading: state is AuthLoading,
-                      onPressed: () => _onLoginPressed(context),
+                    // Login button
+                    AppButton(
+                      label: CTALibrary.signIn,
+                      onPressed:
+                          isLoading ? null : () => _onLoginPressed(context),
+                      isLoading: isLoading,
+                      variant: ButtonVariant.primary,
+                      size: ButtonSize.large,
+                      isFullWidth: true,
                     ),
 
-                    const SizedBox(height: 40),
+                    SizedBox(height: AppSpacing.x4l.toDouble()),
 
-                    // ── Sign Up Link ──────────────────────────────────────
+                    // Sign up link
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
                           "Don't have an account? ",
-                          style: theme.textTheme.bodyMedium,
+                          style: AppTypography.bodyM.copyWith(
+                            color: AppColors.neutral400,
+                          ),
                         ),
                         TextButton(
                           onPressed: () => context.go(AppRoutes.register),
@@ -182,8 +228,8 @@ class _LoginViewState extends State<_LoginView> {
                           ),
                           child: Text(
                             'Sign Up',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.primary,
+                            style: AppTypography.bodyM.copyWith(
+                              color: AppColors.primary500,
                               fontWeight: FontWeight.w600,
                             ),
                           ),

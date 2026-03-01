@@ -1,11 +1,20 @@
-/// History Screen — all past interview sessions.
+/// History Screen — Premium Session History Experience
+///
+/// Features:
+/// - Design token integration
+/// - AppEmptyState for empty history
+/// - Premium card styling for sessions
+/// - Content guidelines integration
 library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:gap/gap.dart';
+import 'package:go_router/go_router.dart';
+import 'package:mockmate/core/constants/copy_guidelines.dart';
 import 'package:mockmate/core/di/injection_container.dart';
+import 'package:mockmate/core/theme/design_tokens.dart';
+import 'package:mockmate/core/widgets/app_empty_state.dart';
 import 'package:mockmate/core/widgets/app_loader.dart';
 import 'package:mockmate/features/dashboard/presentation/bloc/dashboard_bloc.dart';
 
@@ -26,11 +35,12 @@ class _HistoryView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Session History'),
+        title: Text(
+          'Session History',
+          style: AppTypography.titleL,
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => context.pop(),
@@ -44,41 +54,41 @@ class _HistoryView extends StatelessWidget {
           if (state is DashboardError) {
             return AppErrorWidget(
               message: state.message,
-              onRetry: () => context.read<DashboardBloc>().add(RefreshDashboard()),
+              onRetry: () =>
+                  context.read<DashboardBloc>().add(RefreshDashboard()),
             );
           }
           if (state is DashboardLoaded) {
             final history = state.history;
             if (history.isEmpty) {
               return Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.history_toggle_off, size: 64, color: theme.colorScheme.outline),
-                    const Gap(16),
-                    Text('No sessions yet!', style: theme.textTheme.titleMedium),
-                    const Gap(8),
-                    Text('Start an interview to see results here.', style: theme.textTheme.bodyMedium),
-                  ],
+                child: AppEmptyState(
+                  icon: Icons.history_toggle_off,
+                  title: EmptyStateMessages.noHistory,
+                  message: EmptyStateMessages.noHistoryCTA,
                 ),
               );
             }
             return ListView.builder(
-              padding: const EdgeInsets.all(24),
+              padding: EdgeInsets.all(AppSpacing.x3l.toDouble()),
               itemCount: history.length,
               itemBuilder: (context, index) {
                 final session = history[index];
                 final score = session.score;
-                final scoreColor = score >= 80 ? Colors.green : score >= 60 ? Colors.orange : Colors.red;
+                final scoreColor = score >= 80
+                    ? const Color(0xFF22C55E)
+                    : score >= 60
+                        ? const Color(0xFFF59E0B)
+                        : const Color(0xFFEF4444);
 
                 return Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.all(16),
+                  margin: EdgeInsets.only(bottom: AppSpacing.m.toDouble()),
+                  padding: EdgeInsets.all(AppSpacing.l.toDouble()),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.surface,
-                    borderRadius: BorderRadius.circular(14),
+                    color: AppColors.darkSurface,
+                    borderRadius: BorderRadius.circular(AppRadius.m),
                     border: Border.all(
-                      color: theme.colorScheme.outline.withOpacity(0.15),
+                      color: AppColors.neutral700.withOpacity(0.4),
                     ),
                   ),
                   child: Row(
@@ -88,34 +98,47 @@ class _HistoryView extends StatelessWidget {
                         height: 48,
                         decoration: BoxDecoration(
                           color: scoreColor.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(AppRadius.m),
+                          border: Border.all(
+                            color: scoreColor.withOpacity(0.3),
+                            width: 1.5,
+                          ),
                         ),
                         child: Center(
                           child: Text(
                             '${score.toInt()}',
-                            style: theme.textTheme.titleMedium?.copyWith(
+                            style: AppTypography.titleM.copyWith(
                               color: scoreColor,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
                         ),
                       ),
-                      const Gap(14),
+                      Gap(AppSpacing.m.toDouble()),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(session.role, style: theme.textTheme.titleMedium),
+                            Text(
+                              session.role,
+                              style: AppTypography.titleM.copyWith(
+                                color: AppColors.neutral100,
+                              ),
+                            ),
                             Text(
                               '${session.difficulty} • ${session.questionCount} Qs',
-                              style: theme.textTheme.bodySmall,
+                              style: AppTypography.labelM.copyWith(
+                                color: AppColors.neutral400,
+                              ),
                             ),
                           ],
                         ),
                       ),
                       Text(
                         _ago(session.completedAt),
-                        style: theme.textTheme.bodySmall,
+                        style: AppTypography.labelM.copyWith(
+                          color: AppColors.neutral400,
+                        ),
                       ),
                     ],
                   ),

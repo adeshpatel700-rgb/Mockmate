@@ -1,405 +1,528 @@
-/// MockMate App Theme — Dark and Light Mode with Material 3.
+/// ═══════════════════════════════════════════════════════════════════════════════
+/// 🎨 MOCKMATE PREMIUM THEME SYSTEM
+/// ═══════════════════════════════════════════════════════════════════════════════
+///
+/// Material 3-based theme system with premium design tokens, sophisticated
+/// component styling, and carefully crafted light/dark modes.
+///
+/// This theme integrates:
+/// - Premium color palette from design_tokens.dart
+/// - Plus Jakarta Sans typography for readability
+/// - Glass morphism and gradient effects
+/// - Consistent spacing using 8pt grid
+/// - Professional shadows and elevation
+/// - Comprehensive component theming
 ///
 /// WHY MATERIAL 3?
-/// Material 3 (Material You) is Google's latest design system.
-/// It gives us dynamic colour schemes, modern components, and
-/// better accessibility out of the box.
+/// Material 3 (Material You) is Google's latest design system with dynamic
+/// color schemes, modern components, and built-in accessibility.
 ///
-/// WHY SEPARATE THEME FILE?
-/// If the theme is in main.dart, changing colours means hunting
-/// through thousands of lines. With a dedicated file, one change
-/// updates the entire app.
-library;
+/// WHY SEPARATE THEME?
+/// Centralized theming means one change updates the entire app, maintaining
+/// visual consistency and reducing maintenance overhead.
+///
+/// ═══════════════════════════════════════════════════════════════════════════════
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'design_tokens.dart';
+
 class AppTheme {
   AppTheme._();
 
-  // ── Brand Colour Palette ──────────────────────────────────────────────────
-  // Modern gradient palette with better contrast and accessibility.
-  static const Color _primaryColor =
-      Color(0xFF6366F1); // Indigo-500 (better contrast)
-  static const Color _primaryLight = Color(0xFF818CF8); // Indigo-400
-  static const Color _secondaryColor =
-      Color(0xFF06B6D4); // Cyan-500 (more vibrant)
-  static const Color _errorColor = Color(0xFFEF4444); // Red-500
-  static const Color _successColor = Color(0xFF10B981); // Green-500
-  static const Color _warningColor = Color(0xFFF59E0B); // Amber-500
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // THEME EXTENSIONS: Semantic Colors
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // Custom semantic colors not covered by Material colorScheme
 
-  // Dark mode colours — deeper blacks for OLED optimization
-  static const Color _darkBackground = Color(0xFF0A0A0F); // Deeper dark
-  static const Color _darkSurface = Color(0xFF18181B); // Zinc-900
-  static const Color _darkCard = Color(0xFF1F1F23); // Elevated surface
-  static const Color _darkText = Color(0xFFFAFAFA); // Almost white
-  static const Color _darkSubtext = Color(0xFFA1A1AA); // Zinc-400
+  /// Success color for positive feedback, achievements
+  static const Color successColor = AppColors.success500;
 
-  // Light mode colours — warmer, softer tones
-  static const Color _lightBackground = Color(0xFFF9FAFB); // Gray-50
-  static const Color _lightSurface = Color(0xFFFFFFFF);
-  static const Color _lightCard = Color(0xFFFFFFFF);
-  static const Color _lightText = Color(0xFF18181B); // Zinc-900
-  static const Color _lightSubtext = Color(0xFF71717A); // Zinc-500
+  /// Warning color for cautions, alerts
+  static const Color warningColor = AppColors.warning500;
 
-  // ── Typography ────────────────────────────────────────────────────────────
-  // Plus Jakarta Sans — modern, friendly, excellent for reading long text.
-  // Perfect for interview questions and feedback.
+  /// Info color for helpful tips, notifications
+  static const Color infoColor = AppColors.info500;
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // TYPOGRAPHY: Premium Text Styles
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  /// Build Material TextTheme with Plus Jakarta Sans typography
   static TextTheme _buildTextTheme(Color textColor, Color subtextColor) {
     return GoogleFonts.plusJakartaSansTextTheme(
       TextTheme(
-        displayLarge: TextStyle(
-          fontSize: 36,
-          fontWeight: FontWeight.w800,
-          color: textColor,
-          letterSpacing: -1.2,
-          height: 1.1,
-        ),
-        displayMedium: TextStyle(
-          fontSize: 28,
-          fontWeight: FontWeight.w700,
-          color: textColor,
-          letterSpacing: -0.8,
-          height: 1.2,
-        ),
-        titleLarge: TextStyle(
-          fontSize: 22,
-          fontWeight: FontWeight.w700,
-          color: textColor,
-          letterSpacing: -0.3,
-          height: 1.3,
-        ),
-        titleMedium: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-          color: textColor,
-          height: 1.4,
-        ),
-        bodyLarge: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w400,
-          color: textColor,
-          height: 1.7,
-          letterSpacing: 0.1,
-        ),
-        bodyMedium: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w400,
-          color: subtextColor,
-          height: 1.6,
-          letterSpacing: 0.1,
-        ),
-        bodySmall: TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w400,
-          color: subtextColor,
-          height: 1.5,
-        ),
-        labelLarge: TextStyle(
-          fontSize: 15,
-          fontWeight: FontWeight.w600,
-          color: textColor,
-          letterSpacing: 0.2,
-        ),
-        labelMedium: TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w500,
-          color: subtextColor,
-          letterSpacing: 0.3,
-        ),
+        // Display styles (hero headlines)
+        displayLarge: AppTypography.displayXL.copyWith(color: textColor),
+        displayMedium: AppTypography.displayL.copyWith(color: textColor),
+        displaySmall: AppTypography.headlineXL.copyWith(color: textColor),
+
+        // Headline styles (page titles)
+        headlineLarge: AppTypography.headlineL.copyWith(color: textColor),
+        headlineMedium: AppTypography.headlineM.copyWith(color: textColor),
+        headlineSmall: AppTypography.titleXL.copyWith(color: textColor),
+
+        // Title styles (card headers)
+        titleLarge: AppTypography.titleL.copyWith(color: textColor),
+        titleMedium: AppTypography.titleM.copyWith(color: textColor),
+        titleSmall: AppTypography.bodyL.copyWith(color: textColor),
+
+        // Body styles (content, paragraphs)
+        bodyLarge: AppTypography.bodyL.copyWith(color: textColor),
+        bodyMedium: AppTypography.bodyM.copyWith(color: subtextColor),
+        bodySmall: AppTypography.bodyS.copyWith(color: subtextColor),
+
+        // Label styles (buttons, captions)
+        labelLarge: AppTypography.labelM.copyWith(color: textColor),
+        labelMedium: AppTypography.labelS.copyWith(color: subtextColor),
+        labelSmall: AppTypography.labelXS.copyWith(color: subtextColor),
       ),
     );
   }
 
-  // ── Dark Theme ─────────────────────────────────────────────────────────────
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // DARK THEME: Cred-inspired luxury dark mode (OLED black + Gold)
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   static ThemeData get darkTheme {
     final colorScheme = ColorScheme.dark(
-      primary: _primaryColor,
-      secondary: _secondaryColor,
-      error: _errorColor,
-      surface: _darkSurface,
-      onPrimary: Colors.white,
-      onSecondary: Colors.black,
-      onSurface: _darkText,
+      primary: AppColors.primary500,
+      primaryContainer: AppColors.primary800,
+      secondary: AppColors.secondary500,
+      secondaryContainer: AppColors.secondary800,
+      error: AppColors.error500,
+      surface: AppColors.darkSurface,
+      onPrimary: Colors.black,
+      onSecondary: Colors.white,
+      onSurface: AppColors.neutral50,
+      onError: Colors.white,
     );
 
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
-      scaffoldBackgroundColor: _darkBackground,
-      textTheme: _buildTextTheme(_darkText, _darkSubtext),
+      scaffoldBackgroundColor: AppColors.darkBackground,
+      textTheme: _buildTextTheme(AppColors.neutral50, AppColors.neutral400),
 
-      // AppBar — transparent with smooth blur effect
+      // ── AppBar: Pure black, zero elevation (Cred style) ───────────────────
       appBarTheme: AppBarTheme(
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppColors.darkBackground,
         elevation: 0,
-        scrolledUnderElevation: 0.5,
-        surfaceTintColor: _darkSurface,
-        iconTheme: const IconThemeData(color: _darkText, size: 24),
-        titleTextStyle: GoogleFonts.plusJakartaSans(
-          fontSize: 20,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        iconTheme: const IconThemeData(color: AppColors.neutral50, size: 24),
+        titleTextStyle: AppTypography.titleL.copyWith(
+          color: AppColors.neutral50,
           fontWeight: FontWeight.w700,
-          color: _darkText,
           letterSpacing: -0.3,
         ),
       ),
 
-      // Cards — elevated with subtle glow
+      // ── Cards: Deep black with hairline gold-tinted border (Cred style) ───
       cardTheme: CardThemeData(
-        color: _darkCard,
+        color: AppColors.darkCard,
         elevation: 0,
-        shadowColor: _primaryColor.withOpacity(0.1),
+        shadowColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppRadius.m),
           side: BorderSide(
-            color: Colors.white.withOpacity(0.06),
+            color: AppColors.primary500.withOpacity(0.08),
             width: 1,
           ),
         ),
-        margin: const EdgeInsets.symmetric(vertical: 8),
+        margin: EdgeInsets.symmetric(vertical: AppSpacing.s),
       ),
 
-      // Elevated Buttons — modern with shadow
+      // ── Elevated Buttons: Gold + black text (Cred CTA style) ─────────────
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: _primaryColor,
-          foregroundColor: Colors.white,
+          backgroundColor: AppColors.primary500,
+          foregroundColor: Colors.black,
           elevation: 0,
-          shadowColor: _primaryColor.withOpacity(0.4),
-          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+          shadowColor: AppColors.primary500.withOpacity(0.3),
+          padding: EdgeInsets.symmetric(
+            horizontal: AppSpacing.xxl + AppSpacing.xs,
+            vertical: AppSpacing.l,
           ),
-          textStyle: GoogleFonts.plusJakartaSans(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.s),
+          ),
+          textStyle: AppTypography.labelM.copyWith(
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.3,
           ),
         ).copyWith(
           overlayColor: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.pressed)) {
-              return Colors.white.withOpacity(0.2);
+              return Colors.black.withOpacity(0.15);
             }
             return null;
           }),
         ),
       ),
 
-      // Outlined Buttons — thicker border, better hover
+      // ── Outlined Buttons: Gold border ─────────────────────────────────────
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: _primaryColor,
-          side: BorderSide(color: _primaryColor.withOpacity(0.5), width: 2),
-          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
+          foregroundColor: AppColors.primary500,
+          side: const BorderSide(color: AppColors.primary500, width: 1.5),
+          padding: EdgeInsets.symmetric(
+            horizontal: AppSpacing.xxl + AppSpacing.xs,
+            vertical: AppSpacing.l,
+          ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(AppRadius.s),
           ),
-          textStyle: GoogleFonts.plusJakartaSans(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
+          textStyle: AppTypography.labelM,
         ),
       ),
 
-      // Text Buttons — subtle but visible
+      // ── Text Buttons: Gold accent ─────────────────────────────────────────
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: _primaryColor,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          textStyle: GoogleFonts.plusJakartaSans(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
+          foregroundColor: AppColors.primary500,
+          padding: EdgeInsets.symmetric(
+            horizontal: AppSpacing.l,
+            vertical: AppSpacing.m,
           ),
+          textStyle: AppTypography.labelM,
         ),
       ),
 
-      // Input Fields — softer, more rounded
+      // ── Input Fields: Cred-style dark fields with gold focus ──────────────
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: _darkSurface,
+        fillColor: AppColors.darkSurface,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.08)),
+          borderRadius: BorderRadius.circular(AppRadius.s),
+          borderSide: BorderSide(color: AppColors.darkBorder),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.08)),
+          borderRadius: BorderRadius.circular(AppRadius.s),
+          borderSide: BorderSide(color: AppColors.darkBorder),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: _primaryColor, width: 2.5),
+          borderRadius: BorderRadius.circular(AppRadius.s),
+          borderSide: const BorderSide(
+            color: AppColors.primary500,
+            width: 2,
+          ),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: _errorColor, width: 1.5),
+          borderRadius: BorderRadius.circular(AppRadius.s),
+          borderSide: const BorderSide(color: AppColors.error500, width: 1.5),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: _errorColor, width: 2.5),
+          borderRadius: BorderRadius.circular(AppRadius.s),
+          borderSide: const BorderSide(color: AppColors.error500, width: 2),
         ),
-        labelStyle: GoogleFonts.plusJakartaSans(
-          color: _darkSubtext,
-          fontSize: 15,
-          fontWeight: FontWeight.w500,
+        labelStyle: AppTypography.bodyM.copyWith(color: AppColors.neutral400),
+        hintStyle: AppTypography.bodyM.copyWith(
+          color: AppColors.neutral500,
         ),
-        hintStyle: GoogleFonts.plusJakartaSans(
-          color: _darkSubtext.withOpacity(0.6),
-          fontSize: 15,
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: AppSpacing.xl,
+          vertical: AppSpacing.l + 2,
         ),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       ),
 
-      // Chip Theme — rounded pills
+      // ── Chips: Dark with gold selected state ──────────────────────────────
       chipTheme: ChipThemeData(
-        backgroundColor: _darkSurface,
-        selectedColor: _primaryColor.withOpacity(0.2),
-        side: BorderSide(color: Colors.white.withOpacity(0.08)),
+        backgroundColor: AppColors.darkSurface,
+        selectedColor: AppColors.primary500.withOpacity(0.15),
+        side: BorderSide(color: AppColors.darkBorder),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.xs),
         ),
-        labelStyle: GoogleFonts.plusJakartaSans(
-          color: _darkText,
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
+        labelStyle: AppTypography.bodyM.copyWith(color: AppColors.neutral50),
+        padding: EdgeInsets.symmetric(
+          horizontal: AppSpacing.l,
+          vertical: AppSpacing.m,
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       ),
 
-      // Floating Action Button
+      // ── FAB: Gold ─────────────────────────────────────────────────────────
       floatingActionButtonTheme: FloatingActionButtonThemeData(
-        backgroundColor: _primaryColor,
-        foregroundColor: Colors.white,
-        elevation: 4,
+        backgroundColor: AppColors.primary500,
+        foregroundColor: Colors.black,
+        elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.l),
         ),
       ),
 
-      // Bottom Sheet
-      bottomSheetTheme: const BottomSheetThemeData(
-        backgroundColor: _darkCard,
+      // ── Bottom Sheet: Deep black ───────────────────────────────────────────
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: AppColors.darkCard,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          borderRadius:
+              BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
         ),
       ),
 
-      // Dialog
+      // ── Dialog: Premium modal ──────────────────────────────────────────────
       dialogTheme: DialogThemeData(
-        backgroundColor: _darkCard,
+        backgroundColor: AppColors.darkCard,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(AppRadius.xl),
         ),
         elevation: 0,
       ),
 
-      // Progress Indicator
-      progressIndicatorTheme: const ProgressIndicatorThemeData(
-        color: _primaryColor,
-        linearTrackColor: _darkSurface,
+      // ── Progress Indicators: Gold ─────────────────────────────────────────
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: AppColors.primary500,
+        linearTrackColor: AppColors.darkSurface,
       ),
 
-      // Divider
+      // ── Dividers: Very subtle ─────────────────────────────────────────────
       dividerTheme: DividerThemeData(
-        color: Colors.white.withOpacity(0.08),
+        color: AppColors.darkBorder,
         thickness: 1,
+        space: AppSpacing.l,
+      ),
+
+      // ── Snackbar ──────────────────────────────────────────────────────────
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: AppColors.darkCard,
+        contentTextStyle: AppTypography.bodyM.copyWith(
+          color: AppColors.neutral50,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.s),
+        ),
+        behavior: SnackBarBehavior.floating,
       ),
     );
   }
 
-  // ── Light Theme ────────────────────────────────────────────────────────────
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // LIGHT THEME: Clean, professional light mode
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   static ThemeData get lightTheme {
     final colorScheme = ColorScheme.light(
-      primary: _primaryColor,
-      secondary: _secondaryColor,
-      error: _errorColor,
-      surface: _lightSurface,
+      primary: AppColors.primary500,
+      primaryContainer: AppColors.primary100,
+      secondary: AppColors.secondary500,
+      secondaryContainer: AppColors.secondary100,
+      error: AppColors.error500,
+      surface: AppColors.lightSurface,
       onPrimary: Colors.white,
       onSecondary: Colors.black,
-      onSurface: _lightText,
+      onSurface: AppColors.neutral900,
+      onError: Colors.white,
     );
 
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
-      scaffoldBackgroundColor: _lightBackground,
-      textTheme: _buildTextTheme(_lightText, _lightSubtext),
+      scaffoldBackgroundColor: AppColors.lightBackground,
+      textTheme: _buildTextTheme(AppColors.neutral900, AppColors.neutral600),
+
+      // ── AppBar: Clean and minimal ─────────────────────────────────────────
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        scrolledUnderElevation: 0,
-        iconTheme: const IconThemeData(color: _lightText),
-        titleTextStyle: GoogleFonts.inter(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-          color: _lightText,
+        scrolledUnderElevation: 0.5,
+        surfaceTintColor: AppColors.lightSurface,
+        iconTheme: IconThemeData(
+          color: AppColors.neutral900,
+          size: 24,
+        ),
+        titleTextStyle: AppTypography.titleL.copyWith(
+          color: AppColors.neutral900,
         ),
       ),
+
+      // ── Cards: Elevated with subtle shadow ────────────────────────────────
       cardTheme: CardThemeData(
-        color: _lightCard,
+        color: AppColors.lightCard,
         elevation: 0,
+        shadowColor: AppColors.neutral900.withOpacity(0.05),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: Colors.black.withOpacity(0.08)),
+          borderRadius: BorderRadius.circular(AppRadius.m),
+          side: BorderSide(
+            color: Colors.black.withOpacity(0.06),
+            width: 1,
+          ),
         ),
+        margin: EdgeInsets.symmetric(vertical: AppSpacing.s),
       ),
+
+      // ── Elevated Buttons: Solid primary ───────────────────────────────────
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: _primaryColor,
+          backgroundColor: AppColors.primary500,
           foregroundColor: Colors.white,
           elevation: 0,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          shadowColor: AppColors.primary500.withOpacity(0.3),
+          padding: EdgeInsets.symmetric(
+            horizontal: AppSpacing.xxl + AppSpacing.xs,
+            vertical: AppSpacing.l,
+          ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppRadius.s),
           ),
-          textStyle: GoogleFonts.inter(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-          ),
+          textStyle: AppTypography.labelM,
+        ).copyWith(
+          overlayColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.pressed)) {
+              return Colors.black.withOpacity(0.1);
+            }
+            return null;
+          }),
         ),
       ),
+
+      // ── Outlined Buttons: Clean borders ───────────────────────────────────
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: _primaryColor,
-          side: const BorderSide(color: _primaryColor, width: 1.5),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          foregroundColor: AppColors.primary500,
+          side: BorderSide(
+            color: AppColors.primary500.withOpacity(0.6),
+            width: 2,
+          ),
+          padding: EdgeInsets.symmetric(
+            horizontal: AppSpacing.xxl + AppSpacing.xs,
+            vertical: AppSpacing.l,
+          ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppRadius.s),
+          ),
+          textStyle: AppTypography.labelM,
+        ),
+      ),
+
+      // ── Text Buttons: Subtle but visible ──────────────────────────────────
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: AppColors.primary500,
+          padding: EdgeInsets.symmetric(
+            horizontal: AppSpacing.l,
+            vertical: AppSpacing.m,
+          ),
+          textStyle: AppTypography.labelM,
+        ),
+      ),
+
+      // ── Input Fields: Rounded with focus state ────────────────────────────
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: AppColors.lightSurface,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.s),
+          borderSide: BorderSide(
+            color: Colors.black.withOpacity(0.08),
+          ),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.s),
+          borderSide: BorderSide(
+            color: Colors.black.withOpacity(0.08),
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.s),
+          borderSide: BorderSide(
+            color: AppColors.primary500,
+            width: 2.5,
+          ),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.s),
+          borderSide: BorderSide(
+            color: AppColors.error500,
+            width: 1.5,
+          ),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.s),
+          borderSide: BorderSide(
+            color: AppColors.error500,
+            width: 2.5,
+          ),
+        ),
+        labelStyle: AppTypography.bodyM.copyWith(
+          color: AppColors.neutral600,
+        ),
+        hintStyle: AppTypography.bodyM.copyWith(
+          color: AppColors.neutral600.withOpacity(0.6),
+        ),
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: AppSpacing.xl,
+          vertical: AppSpacing.l + 2,
+        ),
+      ),
+
+      // ── Chips: Rounded pills ──────────────────────────────────────────────
+      chipTheme: ChipThemeData(
+        backgroundColor: AppColors.lightCard,
+        selectedColor: AppColors.primary500.withOpacity(0.15),
+        side: BorderSide(color: Colors.black.withOpacity(0.08)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.xs),
+        ),
+        labelStyle: AppTypography.bodyM.copyWith(
+          color: AppColors.neutral900,
+        ),
+        padding: EdgeInsets.symmetric(
+          horizontal: AppSpacing.l,
+          vertical: AppSpacing.m,
+        ),
+      ),
+
+      // ── Floating Action Button ────────────────────────────────────────────
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: AppColors.primary500,
+        foregroundColor: Colors.white,
+        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.l),
+        ),
+      ),
+
+      // ── Bottom Sheet ──────────────────────────────────────────────────────
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: AppColors.lightCard,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(AppRadius.xl),
           ),
         ),
       ),
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: _lightSurface,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.black.withOpacity(0.1)),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.black.withOpacity(0.1)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: _primaryColor, width: 2),
-        ),
-        labelStyle: TextStyle(color: _lightSubtext),
-        hintStyle: TextStyle(color: _lightSubtext.withOpacity(0.7)),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      ),
-      chipTheme: ChipThemeData(
-        backgroundColor: _lightCard,
-        selectedColor: _primaryColor.withOpacity(0.15),
-        side: BorderSide(color: Colors.black.withOpacity(0.1)),
+
+      // ── Dialog ────────────────────────────────────────────────────────────
+      dialogTheme: DialogThemeData(
+        backgroundColor: AppColors.lightCard,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppRadius.xl),
         ),
-        labelStyle: const TextStyle(color: _lightText),
+        elevation: 0,
       ),
+
+      // ── Progress Indicators ───────────────────────────────────────────────
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: AppColors.primary500,
+        linearTrackColor: AppColors.lightSurface,
+      ),
+
+      // ── Dividers ──────────────────────────────────────────────────────────
       dividerTheme: DividerThemeData(
         color: Colors.black.withOpacity(0.08),
         thickness: 1,
+        space: AppSpacing.l,
+      ),
+
+      // ── Snackbar ──────────────────────────────────────────────────────────
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: AppColors.neutral900,
+        contentTextStyle: AppTypography.bodyM.copyWith(
+          color: AppColors.neutral50,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.s),
+        ),
+        behavior: SnackBarBehavior.floating,
       ),
     );
   }
